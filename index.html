@@ -904,14 +904,13 @@ function switchP(id,btn){
   document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));
   document.getElementById('pp-'+id).classList.add('active');btn.classList.add('active');
 }
-
 // ═══ SCREENSHOT ═══
 const scData={desktop:{imgs:[],idx:0},unity:{imgs:[],idx:0},android:{imgs:[],idx:0}};
 function handleUp(p,inp){Array.from(inp.files).forEach(f=>scData[p].imgs.push(URL.createObjectURL(f)));renderSC(p);inp.value='';}
 function renderSC(p){
   const d=scData[p];if(!d.imgs.length)return;
   const el=document.getElementById('sc-'+p);
-  el.innerHTML=`<div class="sc-carousel"><img src="${d.imgs[d.idx]}" onclick="openLB('${d.imgs[d.idx]}')" alt="sc">${d.imgs.length>1?`<div class="sc-ctrl"><div class="sc-arr" onclick="scPrev('${p}')">‹</div><div class="sc-arr" onclick="scNext('${p}')">›</div></div><div class="sc-dots">${d.imgs.map((_,j)=>`<div class="sc-d ${j===d.idx?'active':''}" onclick="scGo('${p}',${j})"></div>`).join('')}</div>`:''}</div>`;
+  el.innerHTML=`<div class="sc-carousel"><div class="sc-imgs"><img src="${d.imgs[d.idx]}" onclick="openLB('${d.imgs[d.idx]}')" alt="sc"></div>${d.imgs.length>1?`<div class="sc-ctrl"><div class="sc-arr" onclick="scPrev('${p}')">‹</div><div class="sc-arr" onclick="scNext('${p}')">›</div></div><div class="sc-dots">${d.imgs.map((_,j)=>`<div class="sc-d ${j===d.idx?'active':''}" onclick="scGo('${p}',${j})"></div>`).join('')}</div>`:''}</div>`;
 }
 scData.desktop.imgs=['desktop1.png','desktop2.png','desktop3.png','desktop4.png'];
 scData.unity.imgs=['unity1.png','unity2.png','unity3.png','unity4.png','unity5.png'];
@@ -1198,6 +1197,7 @@ document.head.insertAdjacentHTML('beforeend','<style>@keyframes spin{from{transf
 </body>
 
 </html>
+
 
 
 
