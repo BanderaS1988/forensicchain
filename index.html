@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForensicChain v3.3</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;background:#0a0d14;color:#e2e8f0;line-height:1.7;overflow-x:hidden;}
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.45;}
+
+/* NAV */
+#lang-bar{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(6,10,16,.95);border-bottom:1px solid #1e3a5f;height:36px;display:flex;align-items:center;justify-content:flex-end;padding:0 20px;gap:4px;}
+.lang-btn{background:transparent;border:1px solid transparent;color:#475569;font-size:12px;font-weight:600;padding:3px 10px;border-radius:6px;cursor:pointer;transition:all .2s;font-family:inherit;}
+.lang-btn.active{background:rgba(59,130,246,.15);border-color:#3b82f6;color:#60a5fa;}
+nav{position:fixed;top:36px;left:0;right:0;z-index:150;background:rgba(10,13,20,.88);backdrop-filter:blur(14px);border-bottom:1px solid #1e3a5f;padding:0 40px;height:52px;display:flex;align-items:center;justify-content:space-between;}
+.nav-brand{font-size:15px;font-weight:800;color:#60a5fa;}
+.nav-links{display:flex;gap:2px;}
+.nav-links a{color:#64748b;font-size:12px;font-weight:500;text-decoration:none;padding:5px 12px;border-radius:7px;transition:all .2s;}
+.nav-links a:hover,.nav-links a.active-link{color:#e2e8f0;background:#1e293b;}
+.role-sel{background:#0f1a2e;border:1px solid #1e3a5f;color:#94a3b8;font-size:12px;padding:4px 10px;border-radius:7px;cursor:pointer;font-family:inherit;}
+#float-nav{position:fixed;right:16px;top:50%;transform:translateY(-50%);z-index:160;display:flex;flex-direction:column;gap:8px;}
+.fn-dot{width:10px;height:10px;border-radius:50%;background:#1e3a5f;border:none;cursor:pointer;transition:all .2s;padding:0;}
+.fn-dot:hover,.fn-dot.active{background:#3b82f6;transform:scale(1.4);}
+#role-banner{display:none;position:relative;z-index:10;padding:10px 48px;text-align:center;font-size:13px;color:#94a3b8;border-bottom:1px solid rgba(59,130,246,.25);}
+#role-overlay{display:none;position:fixed;top:88px;right:20px;z-index:180;width:320px;background:linear-gradient(135deg,#0f1a2e,#111827);border:1px solid #1e3a5f;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.6);}
+#role-overlay .ro-bar{height:3px;}
+#role-overlay .ro-header{padding:16px 20px 12px;border-bottom:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center;}
+#role-overlay .ro-title{font-size:14px;font-weight:800;color:#f1f5f9;}
+#role-overlay .ro-close{background:none;border:none;color:#475569;font-size:18px;cursor:pointer;}
+#role-overlay .ro-body{padding:14px 20px 18px;}
+#role-overlay .ro-desc{font-size:13px;color:#94a3b8;margin-bottom:14px;}
+#role-overlay .ro-feat{display:flex;align-items:flex-start;gap:10px;background:#0a0d14;border-radius:9px;padding:10px 12px;margin-bottom:8px;}
+#role-overlay.role-investigator .ro-bar{background:linear-gradient(90deg,#1d4ed8,#0ea5e9);}
+#role-overlay.role-lawyer .ro-bar{background:linear-gradient(90deg,#7c3aed,#a855f7);}
+#role-overlay.role-judge .ro-bar{background:linear-gradient(90deg,#b45309,#f59e0b);}
+
+main{position:relative;z-index:10;padding-top:88px;}
+section{padding:72px 48px;max-width:1100px;margin:0 auto;}
+.section-title{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#38bdf8;margin-bottom:10px;}
+.section-heading{font-size:30px;font-weight:700;color:#f1f5f9;margin-bottom:14px;}
+.section-sub{color:#94a3b8;font-size:15px;max-width:680px;margin-bottom:40px;}
+hr.div{border:none;border-top:1px solid #1e293b;max-width:1100px;margin:0 auto;}
+
+/* HERO */
+.hero{min-height:88vh;display:flex;flex-direction:column;justify-content:center;padding:100px 48px 72px;max-width:none;border-bottom:1px solid #1e3a5f;}
+.badge{display:inline-block;background:rgba(0,120,255,.15);border:1px solid rgba(0,120,255,.4);color:#60a5fa;padding:5px 16px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:22px;}
+.hero h1{font-size:clamp(36px,6vw,64px);font-weight:800;line-height:1.1;margin-bottom:10px;background:linear-gradient(135deg,#fff 0%,#93c5fd 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero .ver{font-size:18px;color:#38bdf8;font-weight:500;margin-bottom:22px;}
+.hero>p{font-size:16px;color:#94a3b8;max-width:700px;margin-bottom:40px;}
+.hero-stats{display:flex;gap:36px;flex-wrap:wrap;}
+.stat .num{font-size:26px;font-weight:800;color:#38bdf8;display:block;}
+.stat .lbl{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;}
+
+/* PLATFORMS */
+.ptab-row{display:flex;gap:8px;margin-bottom:32px;flex-wrap:wrap;}
+.ptab{background:#0f1a2e;border:1px solid #1e3a5f;color:#64748b;padding:9px 22px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;}
+.ptab.active.desktop{background:rgba(59,130,246,.15);border-color:#3b82f6;color:#60a5fa;}
+.ptab.active.unity{background:rgba(168,85,247,.15);border-color:#a855f7;color:#c084fc;}
+.ptab.active.android{background:rgba(16,185,129,.15);border-color:#10b981;color:#34d399;}
+.ppanel{display:none;}
+.ppanel.active{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start;}
+.sc-zone{background:#0f1a2e;border:2px dashed #1e3a5f;border-radius:14px;overflow:hidden;}
+.sc-placeholder{height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#334155;cursor:pointer;}
+.sc-placeholder .ico{font-size:36px;opacity:.5;}
+.sc-placeholder strong{font-size:13px;color:#475569;}
+.sc-carousel{position:relative;}
+.sc-imgs img{width:100%;max-height:300px;object-fit:cover;border-radius:12px 12px 0 0;cursor:zoom-in;}
+.sc-ctrl{position:absolute;top:50%;transform:translateY(-50%);width:100%;display:flex;justify-content:space-between;padding:0 8px;pointer-events:none;}
+.sc-arr{width:30px;height:30px;background:rgba(10,13,20,.75);border:1px solid #1e3a5f;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;pointer-events:all;color:#64748b;font-size:14px;}
+.sc-dots{display:flex;justify-content:center;gap:5px;padding:8px 0;}
+.sc-d{width:6px;height:6px;border-radius:50%;background:#1e3a5f;cursor:pointer;transition:background .2s;}
+.sc-d.active{background:#3b82f6;}
+.up-btn{display:block;width:100%;padding:9px;text-align:center;background:#0a0d14;border:none;border-top:1px solid #1e293b;color:#475569;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+.up-btn:hover{background:#1e293b;color:#60a5fa;}
+input[type=file]{display:none;}
+.pi-badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;margin-bottom:14px;}
+.pi-badge.desktop{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.3);}
+.pi-badge.unity{background:rgba(168,85,247,.15);color:#c084fc;border:1px solid rgba(168,85,247,.3);}
+.pi-badge.android{background:rgba(16,185,129,.15);color:#34d399;border:1px solid rgba(16,185,129,.3);}
+.pi h3{font-size:22px;font-weight:800;color:#f1f5f9;margin-bottom:6px;}
+.pi .pi-sub{font-size:12px;color:#475569;margin-bottom:16px;}
+.pi p{font-size:13px;color:#94a3b8;margin-bottom:20px;line-height:1.7;}
+.feat-list{display:flex;flex-direction:column;gap:8px;}
+.fi{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#94a3b8;}
+.fi::before{content:'✓';color:#34d399;font-weight:800;flex-shrink:0;margin-top:2px;}
+
+/* FMAP */
+.fmap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:40px;}
+.fmap-item{background:#0f1a2e;border:2px solid #1e3a5f;border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;text-align:center;}
+.fmap-item:hover{border-color:#3b82f6;transform:translateY(-2px);}
+.fmap-item.sel{border-color:#38bdf8;background:rgba(56,189,248,.08);}
+.fmap-item .fmi{font-size:24px;margin-bottom:6px;}
+.fmap-item h4{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:4px;}
+.fmap-detail{background:#0f1a2e;border:1px solid #38bdf8;border-radius:14px;padding:22px;margin-bottom:40px;display:none;}
+.fmap-detail.vis{display:flex;gap:20px;align-items:flex-start;}
+.fmap-plats{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.fplat{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;}
+.fplat.d{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.3);}
+.fplat.u{background:rgba(168,85,247,.15);color:#c084fc;border:1px solid rgba(168,85,247,.3);}
+.fplat.m{background:rgba(16,185,129,.15);color:#34d399;border:1px solid rgba(16,185,129,.3);}
+
+/* SIMULATOR */
+.sim-box{background:#0f1a2e;border:1px solid #1e3a5f;border-radius:16px;overflow:hidden;}
+.sim-drop{border:2px dashed #1e3a5f;border-radius:12px;margin:24px;height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .2s;color:#334155;}
+.sim-drop:hover{border-color:#3b82f6;color:#64748b;}
+.sim-steps{padding:0 24px 24px;}
+.sim-step-row{display:flex;align-items:flex-start;gap:14px;padding:10px 0;border-bottom:1px solid #1e293b;opacity:.35;transition:all .4s;}
+.sim-step-row:last-child{border:none;}
+.sim-step-row.done{opacity:1;}
+.sim-step-row.active{opacity:1;}
+.ss-icon{width:36px;height:36px;border-radius:50%;background:#0a0d14;border:2px solid #1e3a5f;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;transition:all .3s;}
+.sim-step-row.done .ss-icon{border-color:#34d399;background:rgba(52,211,153,.1);}
+.sim-step-row.active .ss-icon{border-color:#38bdf8;background:rgba(56,189,248,.1);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(56,189,248,.3);}50%{box-shadow:0 0 0 6px rgba(56,189,248,0);}}
+.ss-info h5{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:2px;}
+.ss-info p{font-size:12px;color:#64748b;}
+.ss-val{font-family:'JetBrains Mono',monospace;font-size:11px;color:#34d399;margin-top:4px;word-break:break-all;}
+.sim-result{display:none;margin:0 24px 24px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);border-radius:10px;padding:14px 18px;font-size:13px;color:#34d399;}
+
+/* ══════════════════════════════════════
+   DEMO VERIFIER
+══════════════════════════════════════ */
+.demo-launch-area{padding:32px 24px;display:flex;flex-direction:column;align-items:center;gap:20px;}
+.demo-launch-btn{background:linear-gradient(135deg,#1d4ed8,#0ea5e9);color:#fff;padding:16px 44px;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;border:none;font-family:inherit;box-shadow:0 4px 28px rgba(59,130,246,.4);display:flex;align-items:center;gap:12px;transition:all .2s;}
+.demo-launch-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 36px rgba(59,130,246,.5);}
+.demo-launch-btn:disabled{opacity:.65;cursor:not-allowed;transform:none;}
+.demo-progress-wrap{width:100%;max-width:600px;}
+.demo-progress-bar{width:100%;height:8px;background:#1e293b;border-radius:4px;overflow:hidden;}
+.demo-progress-fill{height:100%;background:linear-gradient(90deg,#1d4ed8,#38bdf8,#34d399);background-size:200% 100%;border-radius:4px;width:0%;transition:width .5s ease;animation:shimmer 2s linear infinite;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+.demo-progress-label{font-size:12px;color:#64748b;margin-top:6px;text-align:center;}
+
+/* DEMO STEP ROWS — enhanced */
+.demo-step-row{display:flex;align-items:flex-start;gap:16px;padding:14px 0;border-bottom:1px solid #1e293b;opacity:.25;transition:all .5s;}
+.demo-step-row:last-child{border:none;}
+.demo-step-row.done{opacity:1;}
+.demo-step-row.active{opacity:1;background:rgba(56,189,248,.03);border-radius:10px;padding:14px 10px;margin:0 -10px;}
+.dsi{width:44px;height:44px;border-radius:50%;background:#0a0d14;border:2px solid #1e3a5f;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;transition:all .4s;}
+.demo-step-row.done .dsi{border-color:#34d399;background:rgba(52,211,153,.12);box-shadow:0 0 12px rgba(52,211,153,.2);}
+.demo-step-row.active .dsi{border-color:#38bdf8;background:rgba(56,189,248,.12);animation:pulse 1s infinite;}
+.dsi-info{flex:1;}
+.dsi-info h5{font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:2px;}
+.dsi-info .dsi-sub{font-size:12px;color:#64748b;}
+.dsi-val{font-family:'JetBrains Mono',monospace;font-size:11px;color:#34d399;margin-top:6px;word-break:break-all;line-height:1.7;padding:6px 10px;background:#060a10;border-radius:6px;border-left:2px solid #34d399;}
+.dsi-status{flex-shrink:0;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;align-self:flex-start;margin-top:4px;}
+.dsi-status.ok{background:rgba(52,211,153,.15);color:#34d399;border:1px solid rgba(52,211,153,.3);}
+.dsi-status.pend{background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3);}
+.dsi-status.run{background:rgba(56,189,248,.15);color:#38bdf8;border:1px solid rgba(56,189,248,.3);}
+
+/* RESULT CARDS */
+.result-banner{margin:16px 24px 12px;padding:16px 20px;background:linear-gradient(90deg,rgba(52,211,153,.1),rgba(56,189,248,.06));border:1px solid rgba(52,211,153,.35);border-radius:14px;display:flex;align-items:center;gap:16px;}
+.quick-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 24px 16px;}
+.qs{background:#0a0d14;border:1px solid #1e3a5f;border-radius:12px;padding:14px;text-align:center;transition:border-color .2s;}
+.qs:hover{border-color:#3b82f6;}
+.qs-num{font-size:22px;font-weight:800;}
+.qs-lbl{font-size:10px;color:#475569;margin-top:3px;}
+.vcard-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:0 24px 24px;}
+.vcard{background:#0a0d14;border:1px solid #1e3a5f;border-radius:14px;padding:18px;transition:all .3s;}
+.vcard:hover{border-color:#3b82f6;transform:translateY(-2px);box-shadow:0 4px 20px rgba(59,130,246,.1);}
+.vcard.full{grid-column:1/-1;}
+.vcard.span2{grid-row:span 2;}
+.vcard h4{font-size:11px;font-weight:700;color:#38bdf8;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.vcard-img{width:100%;border-radius:10px;object-fit:cover;cursor:zoom-in;transition:transform .2s;}
+.vcard-img:hover{transform:scale(1.02);}
+.hash-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1e293b;gap:8px;}
+.hash-row:last-of-type{border:none;}
+.hash-algo{font-size:11px;font-weight:700;flex-shrink:0;width:82px;font-family:'JetBrains Mono',monospace;}
+.hash-val{font-family:'JetBrains Mono',monospace;font-size:10px;color:#64748b;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hash-copy{background:none;border:1px solid #1e3a5f;color:#475569;cursor:pointer;font-size:11px;padding:3px 8px;border-radius:5px;transition:all .2s;flex-shrink:0;font-family:inherit;}
+.hash-copy:hover{background:#1e293b;color:#60a5fa;border-color:#3b82f6;}
+.hash-copy.copied{color:#34d399;border-color:#34d399;}
+.info-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e293b;font-size:12px;gap:8px;}
+.info-row:last-child{border:none;}
+.info-k{color:#64748b;flex-shrink:0;}
+.info-v{color:#e2e8f0;font-weight:500;text-align:right;word-break:break-all;}
+.info-v.green{color:#34d399;}
+.info-v.amber{color:#f59e0b;}
+.info-v.mono{font-family:'JetBrains Mono',monospace;font-size:10px;}
+.ts-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;margin:2px;}
+.ts-badge.ok{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:#34d399;}
+.ts-badge.pending{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#f59e0b;}
+.coc-entry{background:#0f1a2e;border:1px solid #1e293b;border-left:3px solid #34d399;border-radius:8px;padding:14px;margin-bottom:10px;}
+.coc-event{font-size:13px;color:#34d399;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.coc-detail{font-family:'JetBrains Mono',monospace;font-size:10px;color:#475569;line-height:2;}
+.coc-detail span.hl{color:#94a3b8;}
+
+/* MAP */
+#leaflet-map{height:300px;border-radius:10px;border:1px solid #1e3a5f;z-index:1;}
+.map-overlay-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(10,13,20,.9);border:1px solid #38bdf8;color:#38bdf8;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;margin-top:8px;}
+.osm-link{display:inline-flex;align-items:center;gap:6px;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);color:#38bdf8;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;transition:all .2s;margin-top:6px;margin-right:6px;}
+.osm-link:hover{background:rgba(56,189,248,.15);}
+.osm-link.green{background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.2);color:#34d399;}
+
+/* STEPS */
+.steps-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.step{background:#0f1a2e;border:1px solid #1e293b;border-radius:12px;padding:18px;display:flex;gap:14px;align-items:flex-start;}
+.sn{width:32px;height:32px;background:linear-gradient(135deg,#1d4ed8,#0ea5e9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0;}
+.sc h4{font-size:13px;font-weight:700;color:#f1f5f9;margin-bottom:4px;}
+.sc p{font-size:12px;color:#64748b;}
+
+/* PRICING */
+.pricing-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:40px;}
+.price-card{background:linear-gradient(135deg,#0f1a2e,#111827);border:1px solid #1e3a5f;border-radius:16px;padding:24px;position:relative;transition:all .2s;}
+.price-card:hover{transform:translateY(-3px);}
+.price-card.featured{border-color:#3b82f6;}
+.price-card.featured::before{content:'AJÁNLOTT';position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#1d4ed8,#0ea5e9);color:#fff;font-size:10px;font-weight:800;padding:3px 14px;border-radius:20px;letter-spacing:1px;}
+.price-card.source{border-color:#f59e0b;background:linear-gradient(135deg,#1c1505,#111827);}
+.price-card.source::before{content:'FORRÁSKÓD';position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#b45309,#f59e0b);color:#fff;font-size:10px;font-weight:800;padding:3px 14px;border-radius:20px;letter-spacing:1px;}
+.pc-name{font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.pc-price{font-size:26px;font-weight:800;color:#f1f5f9;margin-bottom:4px;line-height:1.1;}
+.pc-price span{font-size:13px;color:#64748b;font-weight:400;}
+.pc-sub{font-size:11px;color:#475569;margin-bottom:18px;min-height:32px;}
+.pc-feats{display:flex;flex-direction:column;gap:6px;margin-bottom:20px;}
+.pc-f{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#94a3b8;}
+.pc-f::before{content:'✓';color:#34d399;font-weight:800;flex-shrink:0;}
+.pc-f.no{color:#475569;}
+.pc-f.no::before{content:'—';color:#334155;}
+.pc-f.gold{color:#fcd34d;}
+.pc-f.gold::before{content:'★';color:#f59e0b;}
+.pc-btn{display:block;width:100%;padding:11px;text-align:center;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;text-decoration:none;}
+.pc-btn.primary{background:linear-gradient(135deg,#1d4ed8,#0ea5e9);color:#fff;border:none;}
+.pc-btn.secondary{background:transparent;color:#60a5fa;border:1px solid #1e3a5f;}
+.pc-btn.gold-btn{background:linear-gradient(135deg,#b45309,#f59e0b);color:#fff;border:none;}
+.pc-btn:hover{opacity:.88;}
+.price-note{background:#0f1a2e;border:1px solid #1e293b;border-radius:12px;padding:18px 24px;font-size:13px;color:#64748b;margin-bottom:14px;}
+.api-note{background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.15);border-radius:12px;padding:16px 20px;font-size:12px;color:#64748b;margin-bottom:40px;display:flex;gap:12px;}
+.nextsteps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:40px;}
+.ns{background:#0f1a2e;border:1px solid #1e293b;border-radius:12px;padding:20px;text-align:center;}
+.ns-num{width:36px;height:36px;background:linear-gradient(135deg,#1d4ed8,#0ea5e9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;margin:0 auto 12px;}
+.ns h4{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:6px;}
+.ns p{font-size:12px;color:#475569;line-height:1.5;}
+
+/* TECHNICAL */
+.cmp-table{width:100%;border-collapse:collapse;margin-bottom:40px;font-size:13px;}
+.cmp-table th{padding:12px 16px;text-align:left;background:#0f1a2e;border-bottom:2px solid #1e3a5f;color:#94a3b8;font-weight:600;}
+.cmp-table th:first-child{color:#38bdf8;}
+.cmp-table td{padding:11px 16px;border-bottom:1px solid #1e293b;color:#64748b;}
+.cmp-table tr:hover td{background:rgba(30,58,95,.2);}
+.cmp-table td:first-child{color:#e2e8f0;font-weight:500;}
+.chk{color:#34d399;font-size:16px;}
+.dash{color:#334155;}
+.sysreq-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px;}
+.sysreq-card{background:#0f1a2e;border:1px solid #1e3a5f;border-radius:14px;padding:22px;}
+.sysreq-card h4{font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:14px;}
+.req-row{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid #1e293b;gap:8px;}
+.req-row:last-child{border:none;}
+.req-row .rk{color:#64748b;}
+.req-row .rv{color:#e2e8f0;font-weight:500;text-align:right;}
+.tags{display:flex;gap:8px;flex-wrap:wrap;}
+.tag{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:#34d399;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;}
+.pdf-btn{display:inline-flex;align-items:center;gap:8px;background:#0f1a2e;border:1px solid #1e3a5f;color:#60a5fa;padding:10px 22px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;text-decoration:none;}
+.pdf-btn:hover{background:#1e293b;}
+
+/* USE CASES */
+.uc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.uc{background:#0f1a2e;border:1px solid #1e293b;border-radius:12px;padding:18px;}
+.uc .ui{font-size:24px;margin-bottom:8px;}
+.uc h4{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:5px;}
+.uc p{font-size:12px;color:#475569;line-height:1.5;}
+
+/* CTA */
+.cta-box{background:linear-gradient(135deg,#0f1a2e,#1e293b);border:1px solid #1e3a5f;border-radius:20px;padding:56px 48px;text-align:center;position:relative;overflow:hidden;}
+.cta-box::before{content:'';position:absolute;top:-120px;left:50%;transform:translateX(-50%);width:600px;height:300px;background:radial-gradient(circle,rgba(59,130,246,.08) 0%,transparent 70%);}
+.cta-box h2{font-size:30px;font-weight:800;color:#f1f5f9;margin-bottom:14px;position:relative;}
+.cta-box p{color:#64748b;font-size:15px;margin-bottom:32px;position:relative;}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative;}
+.btn-p{background:linear-gradient(135deg,#1d4ed8,#0ea5e9);color:#fff;padding:13px 32px;border-radius:9px;font-size:14px;font-weight:700;text-decoration:none;display:inline-block;}
+.btn-s{background:transparent;color:#60a5fa;padding:13px 32px;border-radius:9px;font-size:14px;font-weight:700;text-decoration:none;border:1px solid #1e3a5f;display:inline-block;}
+footer{background:#060a10;border-top:1px solid #1e293b;padding:24px 48px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;position:relative;z-index:10;}
+footer .brand{font-size:14px;font-weight:800;color:#60a5fa;}
+footer p{font-size:11px;color:#334155;}
+.lb{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+.lb.open{display:flex;}
+.lb img{max-width:92vw;max-height:85vh;object-fit:contain;border-radius:8px;}
+.lb-x{position:absolute;top:18px;right:24px;font-size:28px;color:#64748b;cursor:pointer;}
+.lb-x:hover{color:#fff;}
+.lb-info{font-size:11px;color:#475569;font-family:'JetBrains Mono',monospace;}
+
+@media(max-width:900px){
+  nav{padding:0 16px;}
+  .nav-links{display:none;}
+  main{padding-top:88px;}
+  section{padding:48px 20px;}
+  .ppanel.active,.steps-grid,.pricing-grid,.sysreq-grid,.fmap-grid,.uc-grid,.nextsteps,.vcard-grid,.quick-stats{grid-template-columns:1fr;}
+  .hero{min-height:auto;padding:60px 20px 48px;}
+  #float-nav{display:none;}
+  footer{flex-direction:column;text-align:center;}
+}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+
+<div id="lang-bar">
+  <button class="lang-btn active" onclick="setLang('hu')">🇭🇺 Magyar</button>
+  <button class="lang-btn" onclick="setLang('en')">🇬🇧 English</button>
+  <button class="lang-btn" onclick="setLang('de')">🇩🇪 Deutsch</button>
+  <button class="lang-btn" onclick="setLang('fr')">🇫🇷 Français</button>
+  <button class="lang-btn" onclick="setLang('ro')">🇷🇴 Română</button>
+</div>
+
+<nav>
+  <div class="nav-brand">⬡ ForensicChain</div>
+  <div class="nav-links">
+    <a href="#hero">Platformok</a>
+    <a href="#features">Funkciók</a>
+    <a href="#simulator">Szimulátor</a>
+    <a href="#pricing">Árak</a>
+    <a href="#technical">Technikai</a>
+    <a href="#contact">Kapcsolat</a>
+  </div>
+  <div>
+    <select class="role-sel" onchange="setRole(this.value)" id="role-sel">
+      <option value="">Szerepkör...</option>
+      <option value="investigator">🔎 Nyomozó</option>
+      <option value="lawyer">⚖️ Ügyvéd</option>
+      <option value="judge">🏛️ Bíró</option>
+    </select>
+  </div>
+</nav>
+
+<div id="float-nav">
+  <button class="fn-dot" onclick="scrollTo2('hero')"></button>
+  <button class="fn-dot" onclick="scrollTo2('platforms')"></button>
+  <button class="fn-dot" onclick="scrollTo2('features')"></button>
+  <button class="fn-dot" onclick="scrollTo2('simulator')"></button>
+  <button class="fn-dot" onclick="scrollTo2('pricing')"></button>
+  <button class="fn-dot" onclick="scrollTo2('technical')"></button>
+  <button class="fn-dot" onclick="scrollTo2('contact')"></button>
+</div>
+
+<div id="role-banner"></div>
+<div id="role-overlay">
+  <div class="ro-bar"></div>
+  <div class="ro-header"><div class="ro-title" id="ro-title">Szerepkör</div><button class="ro-close" onclick="clearRole()">✕</button></div>
+  <div class="ro-body"><div class="ro-desc" id="ro-desc"></div><div id="ro-features"></div></div>
+</div>
+
+<main>
+<!-- HERO -->
+<div id="hero" class="hero">
+  <div class="badge">✦ Törvényszéki · Digitális · Igazolható</div>
+  <h1>ForensicChain</h1>
+  <div class="ver">v3.3 — Professzionális kiadás</div>
+  <p>Teljes körű törvényszéki ökoszisztéma: Python asztali alkalmazás irodai elemzéshez, Unity kliens ügykezeléshez és Android mobilapp helyszíni bizonyítékrögzítéshez — bírósági szintű kriptográfiai védelemmel és kettős blokklánc időbélyegzéssel.</p>
+  <div class="hero-stats">
+    <div class="stat"><span class="num">3</span><span class="lbl">Platform</span></div>
+    <div class="stat"><span class="num">2×</span><span class="lbl">Időbélyeg</span></div>
+    <div class="stat"><span class="num">SHA‑512</span><span class="lbl">Hash integritás</span></div>
+    <div class="stat"><span class="num">7</span><span class="lbl">RSA fázis</span></div>
+    <div class="stat"><span class="num">2</span><span class="lbl">Felületi nyelv</span></div>
+  </div>
+</div>
+<hr class="div">
+
+<!-- PLATFORMS -->
+<section id="platforms">
+  <div class="section-title">Rendszerkomponensek</div>
+  <h2 class="section-heading">Három platform, egy ökoszisztéma</h2>
+  <p class="section-sub">Kattintson egy platformra a részletek megtekintéséhez.</p>
+  <div class="ptab-row">
+    <button class="ptab active desktop" onclick="switchP('desktop',this)">🖥️ Desktop</button>
+    <button class="ptab unity" onclick="switchP('unity',this)">🎮 Unity Kliens</button>
+    <button class="ptab android" onclick="switchP('android',this)">📱 Android</button>
+  </div>
+  <div id="pp-desktop" class="ppanel active">
+    <div class="sc-zone"><div id="sc-desktop"><div class="sc-placeholder" onclick="document.getElementById('up-desktop').click()"><div class="ico">🖼️</div><strong>Képernyőképek feltöltése</strong><p>Desktop · JPG/PNG/WebP</p></div></div><input type="file" id="up-desktop" accept="image/*" multiple onchange="handleUp('desktop',this)"><button class="up-btn" onclick="document.getElementById('up-desktop').click()">＋ Képek hozzáadása</button></div>
+    <div class="pi"><span class="pi-badge desktop">🖥️ Python · Desktop</span><h3>ForensicChain Desktop</h3><div class="pi-sub">Windows / Linux · Hardverkötött licenc</div><p>Irodai és laboratóriumi forensic elemzés. 7 fázisú kriptográfiai ellenőrzés és jogi dokumentációk generálása.</p><div class="feat-list"><div class="fi">ZIP és FCE/FCE2 csomagok ellenőrzése</div><div class="fi">SHA-512 / Keccak256 / SHA3-512 hash-validálás</div><div class="fi">7 fázisú RSA aláírás OCSP visszavonással</div><div class="fi">OpenTimestamps Bitcoin blokklánc</div><div class="fi">Magyar, amerikai, német jogi sablonok (Daubert)</div><div class="fi">Docker FileBrowser integráció</div><div class="fi">Hardverazonosító alapú licencelés</div></div></div>
+  </div>
+  <div id="pp-unity" class="ppanel">
+    <div class="sc-zone"><div id="sc-unity"><div class="sc-placeholder" onclick="document.getElementById('up-unity').click()"><div class="ico">🖼️</div><strong>Képernyőképek feltöltése</strong><p>Unity kliens</p></div></div><input type="file" id="up-unity" accept="image/*" multiple onchange="handleUp('unity',this)"><button class="up-btn" onclick="document.getElementById('up-unity').click()">＋ Képek hozzáadása</button></div>
+    <div class="pi"><span class="pi-badge unity">🎮 Unity · Kliens</span><h3>ForensicChain Unity</h3><div class="pi-sub">Windows / Mac · Ügykezelő</div><p>Szervezeti szintű ügykezelés grafikus felületen.</p><div class="feat-list"><div class="fi">Ügykezelés: nyitott, folyamatban, lezárt</div><div class="fi">Keresés, szűrés, rendezés</div><div class="fi">Személyzetkezelés QR-kártyákkal</div><div class="fi">Beépített médianézegető</div><div class="fi">Chain of Custody státuszkövetés</div><div class="fi">Magyar / angol felület</div></div></div>
+  </div>
+  <div id="pp-android" class="ppanel">
+    <div class="sc-zone"><div id="sc-android"><div class="sc-placeholder" onclick="document.getElementById('up-android').click()"><div class="ico">🖼️</div><strong>Képernyőképek feltöltése</strong><p>Android app</p></div></div><input type="file" id="up-android" accept="image/*" multiple onchange="handleUp('android',this)"><button class="up-btn" onclick="document.getElementById('up-android').click()">＋ Képek hozzáadása</button></div>
+    <div class="pi"><span class="pi-badge android">📱 Android · Mobil</span><h3>ForensicChain Mobile</h3><div class="pi-sub">Android 9+ · Helyszíni rögzítés</div><p>Kettős időbélyegzés, metaadat-gyűjtés és automatikus feltöltés.</p><div class="feat-list"><div class="fi">Fotó, videó, hang forensic csomagba</div><div class="fi">Kettős időbélyegzés (RFC 3161 + Bitcoin)</div><div class="fi">GPS, hardver, hálózat, NTP metaadat</div><div class="fi">Szimulált GPS érzékelés</div><div class="fi">QR-kód alapú azonosítás</div><div class="fi">Offline működés + szinkronizálás</div><div class="fi">AES titkosított FCE2 csomag</div></div></div>
+  </div>
+</section>
+<hr class="div">
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-title">Interaktív Funkciótérkép</div>
+  <h2 class="section-heading">Kattintson egy funkcióra</h2>
+  <p class="section-sub">Válasszon funkciót a részletek megtekintéséhez.</p>
+  <div class="fmap-grid" id="fmap-grid"></div>
+  <div class="fmap-detail" id="fmap-detail"><div style="flex:1;"><h3 id="fmd-title" style="font-size:18px;font-weight:800;color:#f1f5f9;margin-bottom:8px;"></h3><p id="fmd-desc" style="font-size:14px;color:#94a3b8;margin-bottom:14px;"></p><div class="fmap-plats" id="fmd-plats"></div></div></div>
+</section>
+<hr class="div">
+
+<!-- SIMULATOR -->
+<section id="simulator">
+  <div class="section-title">Bizonyíték Szimulátor & Élő Demo</div>
+  <h2 class="section-heading">Próbálja ki élőben</h2>
+  <p class="section-sub">Töltse fel saját fájlját — vagy töltse be a valódi, hitelesített demo forensic csomagot.</p>
+
+  <div style="display:flex;gap:8px;margin-bottom:24px;">
+    <button id="tab-sim" onclick="switchSimTab('sim')" style="background:rgba(59,130,246,.15);border:1px solid #3b82f6;color:#60a5fa;padding:9px 22px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📁 Saját feltöltés</button>
+    <button id="tab-demo" onclick="switchSimTab('demo')" style="background:#0f1a2e;border:1px solid #1e3a5f;color:#64748b;padding:9px 22px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">🔴 Valódi Demo csomag</button>
+  </div>
+
+  <!-- UPLOAD SIM -->
+  <div id="sim-upload-panel">
+    <div class="sim-box">
+      <div class="sim-drop" id="sim-drop" onclick="document.getElementById('sim-file').click()" ondragover="event.preventDefault();this.style.borderColor='#3b82f6'" ondragleave="this.style.borderColor=''" ondrop="simDrop(event)">
+        <div style="font-size:32px;">📁</div>
+        <strong style="color:#475569;font-size:14px;">Fájl húzása vagy kattintás a feltöltéshez</strong>
+        <p style="font-size:12px;">JPG, PNG, WebP</p>
+      </div>
+      <input type="file" id="sim-file" accept="image/*" onchange="runSim(this.files[0])">
+      <div class="sim-steps" id="sim-steps" style="display:none;">
+        <div class="sim-step-row" id="ss0"><div class="ss-icon">📄</div><div class="ss-info"><h5>Fájl beolvasása</h5><p>Méret, típus, névhitelesítés</p><div class="ss-val" id="sv0"></div></div></div>
+        <div class="sim-step-row" id="ss1"><div class="ss-icon">🔑</div><div class="ss-info"><h5>SHA-512 Hash számítás</h5><p>Kriptográfiai ujjlenyomat</p><div class="ss-val" id="sv1"></div></div></div>
+        <div class="sim-step-row" id="ss2"><div class="ss-icon">✍️</div><div class="ss-info"><h5>Digitális aláírás</h5><p>RSA-2048</p><div class="ss-val" id="sv2"></div></div></div>
+        <div class="sim-step-row" id="ss3"><div class="ss-icon">🕐</div><div class="ss-info"><h5>RFC 3161 időbélyeg</h5><p>FreeTSA hitelesítés</p><div class="ss-val" id="sv3"></div></div></div>
+        <div class="sim-step-row" id="ss4"><div class="ss-icon">⛓️</div><div class="ss-info"><h5>Bitcoin blokklánc</h5><p>OpenTimestamps</p><div class="ss-val" id="sv4"></div></div></div>
+        <div class="sim-step-row" id="ss5"><div class="ss-icon">🔗</div><div class="ss-info"><h5>Chain of Custody</h5><p>Eseménylánc init</p><div class="ss-val" id="sv5"></div></div></div>
+        <div class="sim-step-row" id="ss6"><div class="ss-icon">📦</div><div class="ss-info"><h5>FCE2 csomag</h5><p>AES-256-GCM titkosítás</p><div class="ss-val" id="sv6"></div></div></div>
+      </div>
+      <div class="sim-result" id="sim-result">✅ <strong>Forensic csomag kész!</strong> <span id="sim-summary"></span></div>
+    </div>
+  </div>
+
+  <!-- DEMO PANEL -->
+  <div id="sim-demo-panel" style="display:none;">
+    <div class="sim-box">
+      <!-- LAUNCH -->
+      <div id="demo-launch-area" class="demo-launch-area">
+        <div style="text-align:center;">
+          <div style="font-size:52px;margin-bottom:14px;filter:drop-shadow(0 0 20px rgba(56,189,248,.4));">🔐</div>
+          <div style="font-size:20px;font-weight:800;color:#f1f5f9;margin-bottom:6px;">Valódi ForensicChain bizonyítékcsomag</div>
+          <div style="font-size:13px;color:#475569;margin-bottom:8px;font-family:'JetBrains Mono',monospace;">EVIDENCE-20260227-151318-04A77</div>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:24px;">
+            <span style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:#34d399;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">✓ SHA-512 hash</span>
+            <span style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.3);color:#38bdf8;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">✓ RSA-2048</span>
+            <span style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3);color:#c084fc;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">✓ RFC 3161</span>
+            <span style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#f59e0b;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">⏳ Bitcoin OTS</span>
+          </div>
+          <button class="demo-launch-btn" id="demo-launch-btn" onclick="runDemoVerify()">
+            <span style="font-size:20px;">▶</span> Verifikáció indítása
+          </button>
+        </div>
+        <div class="demo-progress-wrap">
+          <div class="demo-progress-bar"><div class="demo-progress-fill" id="demo-progress"></div></div>
+          <div class="demo-progress-label" id="demo-progress-label">Kattintson a verifikáció indításához</div>
+        </div>
+      </div>
+
+      <!-- STEPS -->
+      <div id="demo-steps" style="display:none;padding:0 24px 8px;">
+        <div class="demo-step-row" id="ds0"><div class="dsi">📄</div><div class="dsi-info"><h5>Csomag azonosítása</h5><div class="dsi-sub">Evidence ID, rögzítési idő, eszközinfo</div><div class="dsi-val" id="dv0" style="display:none;"></div></div><div class="dsi-status run" id="dst0" style="display:none;"></div></div>
+        <div class="demo-step-row" id="ds1"><div class="dsi">🔑</div><div class="dsi-info"><h5>4-szeres hash ellenőrzés</h5><div class="dsi-sub">SHA-512 · SHA-256 · BLAKE3 · Keccak-256</div><div class="dsi-val" id="dv1" style="display:none;"></div></div><div class="dsi-status run" id="dst1" style="display:none;"></div></div>
+        <div class="demo-step-row" id="ds2"><div class="dsi">✍️</div><div class="dsi-info"><h5>RSA-2048 aláírás hitelesítés</h5><div class="dsi-sub">ForensicCA tanúsítványlánc ellenőrzés</div><div class="dsi-val" id="dv2" style="display:none;"></div></div><div class="dsi-status run" id="dst2" style="display:none;"></div></div>
+        <div class="demo-step-row" id="ds3"><div class="dsi">🕐</div><div class="dsi-info"><h5>FreeTSA RFC 3161 időbélyeg</h5><div class="dsi-sub">Hitelesített időpont, sorozatszám ellenőrzés</div><div class="dsi-val" id="dv3" style="display:none;"></div></div><div class="dsi-status run" id="dst3" style="display:none;"></div></div>
+        <div class="demo-step-row" id="ds4"><div class="dsi">⛓️</div><div class="dsi-info"><h5>OpenTimestamps Bitcoin státusz</h5><div class="dsi-sub">3 naptár: bob.btc · finney · catallaxy</div><div class="dsi-val" id="dv4" style="display:none;"></div></div><div class="dsi-status pend" id="dst4" style="display:none;"></div></div>
+        <div class="demo-step-row" id="ds5"><div class="dsi">📡</div><div class="dsi-info"><h5>GPS & helyadat audit</h5><div class="dsi-sub">Koordináták, pontosság, szimulált GPS teszt</div><div class="dsi-val" id="dv5" style="display:none;"></div></div><div class="dsi-status ok" id="dst5" style="display:none;"></div></div>
+        <div class="demo-step-row" id="ds6"><div class="dsi">🔗</div><div class="dsi-info"><h5>Chain of Custody integritás</h5><div class="dsi-sub">Eseménylánc hash-ellenőrzés</div><div class="dsi-val" id="dv6" style="display:none;"></div></div><div class="dsi-status ok" id="dst6" style="display:none;"></div></div>
+      </div>
+
+      <!-- RESULT CARDS -->
+      <div id="demo-cards" style="display:none;">
+        <!-- BANNER -->
+        <div class="result-banner">
+          <span style="font-size:32px;">✅</span>
+          <div style="flex:1;">
+            <div style="font-size:16px;font-weight:800;color:#34d399;">Forensic csomag hitelesítve — 7/7 ellenőrzés SIKERES</div>
+            <div style="font-size:11px;color:#475569;margin-top:3px;font-family:'JetBrains Mono',monospace;">EVIDENCE-20260227-151318-04A77 · SHA512withRSA · FreeTSA RFC 3161 · OpenTimestamps PENDING · ISO/IEC 27037</div>
+          </div>
+          <div style="text-align:right;font-size:11px;color:#64748b;line-height:1.6;">2026-02-27<br>15:13:27 UTC<br><span style="color:#34d399;">✓ VALID</span></div>
+        </div>
+
+        <!-- QUICK STATS -->
+        <div class="quick-stats">
+          <div class="qs"><div class="qs-num" style="color:#34d399;">4</div><div class="qs-lbl">Hash algoritmus ✓</div></div>
+          <div class="qs"><div class="qs-num" style="color:#38bdf8;font-size:16px;">RFC 3161</div><div class="qs-lbl">Időbélyeg ✓</div></div>
+          <div class="qs"><div class="qs-num" style="color:#c084fc;font-size:16px;">RSA-2048</div><div class="qs-lbl">Aláírás ✓</div></div>
+          <div class="qs"><div class="qs-num" style="color:#f59e0b;font-size:16px;">⏳ BTC</div><div class="qs-lbl">OTS pending</div></div>
+        </div>
+
+        <div class="vcard-grid">
+          <!-- IMAGE + META -->
+          <div class="vcard span2">
+            <h4>📸 Rögzített bizonyíték — original.png</h4>
+            <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;align-items:start;">
+              <div>
+                <img id="demo-img" class="vcard-img" src="" alt="forensic" onclick="openLB(this.src)" style="width:100%;border-radius:10px;cursor:zoom-in;min-height:160px;background:#060a10;">
+                <div style="margin-top:8px;font-size:10px;color:#475569;text-align:center;">🔍 Kattintson a nagyításhoz</div>
+              </div>
+              <div>
+                <div class="info-row"><span class="info-k">Evidence ID</span><span class="info-v mono" style="font-size:9px;">EVIDENCE-20260227-151318-04A77</span></div>
+                <div class="info-row"><span class="info-k">Felbontás</span><span class="info-v">1920 × 1080 px</span></div>
+                <div class="info-row"><span class="info-k">Formátum</span><span class="info-v">PNG</span></div>
+                <div class="info-row"><span class="info-k">Forrás</span><span class="info-v green">CAMERA_LIVE ✓</span></div>
+                <div class="info-row"><span class="info-k">Eszköz</span><span class="info-v">Motorola Razr 40 Ultra</span></div>
+                <div class="info-row"><span class="info-k">Rögzítés (UTC)</span><span class="info-v">2026-02-27 15:13:18</span></div>
+                <div class="info-row"><span class="info-k">Helyi idő</span><span class="info-v">2026-02-27 16:13:18 +01:00</span></div>
+                <div class="info-row"><span class="info-k">Operátor</span><span class="info-v mono" style="font-size:9px;">OPERATOR_438a75...</span></div>
+                <div class="info-row"><span class="info-k">Session</span><span class="info-v mono" style="font-size:9px;">SESSION-20260227134120</span></div>
+                <div class="info-row"><span class="info-k">Felvétel #</span><span class="info-v">2 (session-ben)</span></div>
+                <div style="margin-top:10px;padding:8px 10px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.2);border-radius:8px;font-size:10px;color:#34d399;">✓ Kép integritása igazolt — hash egyezik a tanúsított értékkel</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- HASHES -->
+          <div class="vcard">
+            <h4>🔑 Kriptográfiai hash-ek <span style="color:#64748b;font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;">— kattintson a másoláshoz</span></h4>
+            <div class="hash-row">
+              <span class="hash-algo" style="color:#38bdf8;">SHA-512</span>
+              <span class="hash-val">C9F3CC13F5852D4704C99852E066CD9B...</span>
+              <button class="hash-copy" onclick="copyH('C9F3CC13F5852D4704C99852E066CD9BE8457B1E895C0644D9E18BEC98F477DF279D1177661EB94FC3CBCD38E004A2CD30B0990D7ECCAC0E0C12EC7C0430D643',this)">⎘ Másolás</button>
+            </div>
+            <div class="hash-row">
+              <span class="hash-algo" style="color:#34d399;">SHA-256</span>
+              <span class="hash-val">1A156D91D076E6D892AE782C362AB9BB...</span>
+              <button class="hash-copy" onclick="copyH('1A156D91D076E6D892AE782C362AB9BBAF4B0EA54F5FEFAC106DFE7E55E1EAE1',this)">⎘ Másolás</button>
+            </div>
+            <div class="hash-row">
+              <span class="hash-algo" style="color:#a78bfa;">BLAKE3</span>
+              <span class="hash-val">CFC96A7798750C9F05E8DA27329B39A0...</span>
+              <button class="hash-copy" onclick="copyH('CFC96A7798750C9F05E8DA27329B39A0DE9D76029430DFD9C2291059D5F292E032CCD940385430F92E25B6B903C0D8BAAEB00C52A7925CAB0B335C56C078461D',this)">⎘ Másolás</button>
+            </div>
+            <div class="hash-row">
+              <span class="hash-algo" style="color:#f59e0b;">Keccak-256</span>
+              <span class="hash-val">C2D2D08B047C03C0703FA1183A303B47...</span>
+              <button class="hash-copy" onclick="copyH('C2D2D08B047C03C0703FA1183A303B47C540E38D9920FB47D5119D81FE640B74',this)">⎘ Másolás</button>
+            </div>
+            <div style="margin-top:12px;padding:10px;background:#060a10;border-radius:8px;">
+              <div style="font-size:10px;color:#64748b;margin-bottom:6px;">Metadata hash:</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#334155;word-break:break-all;line-height:1.7;">373A1F5CAF9289C00084997EC2F24D57C3AD14FFADD21535908E9BFE5E113AE6FD515D3FF40C7CD7C9226B1BDDCB76D0F5A06CDC64C5DF945180B21706EBB1AF</div>
+            </div>
+          </div>
+
+          <!-- TIMESTAMPS -->
+          <div class="vcard">
+            <h4>🕐 Időbélyegek & Hitelesítés</h4>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+              <span class="ts-badge ok">✓ FreeTSA RFC 3161</span>
+              <span class="ts-badge pending">⏳ Bitcoin OTS</span>
+            </div>
+            <div class="info-row"><span class="info-k">Rögzítés (UTC)</span><span class="info-v mono">2026-02-27T15:13:18.239Z</span></div>
+            <div class="info-row"><span class="info-k">Helyi idő</span><span class="info-v">2026-02-27 16:13:18 +01:00</span></div>
+            <div class="info-row"><span class="info-k">TSA időpont</span><span class="info-v green">2026-02-27T15:13:27Z ✓</span></div>
+            <div class="info-row"><span class="info-k">TSA sorozatszám</span><span class="info-v mono">54935813</span></div>
+            <div class="info-row"><span class="info-k">TSA hatóság</span><span class="info-v">freetsa.org</span></div>
+            <div class="info-row"><span class="info-k">OTS beküldve</span><span class="info-v mono">2026-02-27T15:13:30Z</span></div>
+            <div class="info-row"><span class="info-k">OTS naptárak</span><span class="info-v" style="font-size:10px;">bob.btc · finney · catallaxy</span></div>
+            <div class="info-row"><span class="info-k">Bitcoin blokk</span><span class="info-v amber">PENDING — megerősítésre vár</span></div>
+            <div class="info-row"><span class="info-k">OTS hash</span><span class="info-v mono" style="font-size:9px;">1a156d91d076e6d8...</span></div>
+          </div>
+
+          <!-- GPS + MAP FULL WIDTH -->
+          <div class="vcard full">
+            <h4>📡 GPS & Helyszín — Balatonalmádi, Veszprém megye, HU</h4>
+            <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:20px;align-items:start;">
+              <div>
+                <div class="info-row"><span class="info-k">Helyszín</span><span class="info-v green">Balatonalmádi, HU ✓</span></div>
+                <div class="info-row"><span class="info-k">Koordináta (N)</span><span class="info-v mono" style="letter-spacing:3px;">██.████°</span></div>
+                <div class="info-row"><span class="info-k">Koordináta (E)</span><span class="info-v mono" style="letter-spacing:3px;">██.████°</span></div>
+                <div class="info-row"><span class="info-k">Tengerszint</span><span class="info-v">154,2 m</span></div>
+                <div class="info-row"><span class="info-k">Pontosság</span><span class="info-v amber">±100,0 m (hálózati fix)</span></div>
+                <div class="info-row"><span class="info-k">GPS timestamp</span><span class="info-v mono">15:13:15.857Z</span></div>
+                <div class="info-row"><span class="info-k">Koordinátarendszer</span><span class="info-v">WGS84</span></div>
+                <div class="info-row"><span class="info-k">Sebesség</span><span class="info-v">0,0 m/s (álló)</span></div>
+                <div class="info-row"><span class="info-k">Irányszög</span><span class="info-v">0,0°</span></div>
+                <div class="info-row"><span class="info-k">Műholdak</span><span class="info-v">0 (hálózat-alapú)</span></div>
+                <div class="info-row"><span class="info-k">Szimulált GPS</span><span class="info-v green">❌ Nem észlelt ✓</span></div>
+                <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;">
+                  <a href="https://www.openstreetmap.org/?mlat=46.9218&mlon=18.0069&zoom=15" target="_blank" class="osm-link">🗺️ OpenStreetMap</a>
+                  <a href="https://maps.google.com/?q=46.9218,18.0069" target="_blank" class="osm-link green">📍 Google Maps</a>
+                </div>
+              </div>
+              <div>
+                <div id="leaflet-map"></div>
+                <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <span class="map-overlay-badge">📍 Balatonalmádi, Veszprém m.</span>
+                  <span style="font-size:10px;color:#334155;">Koordináták adatvédelmi okokból kitakarva</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RSA -->
+          <div class="vcard">
+            <h4>✍️ RSA Aláírás & Tanúsítvány</h4>
+            <div class="info-row"><span class="info-k">Algoritmus</span><span class="info-v green">SHA512withRSA ✓</span></div>
+            <div class="info-row"><span class="info-k">Kulcshossz</span><span class="info-v">RSA-2048 bit</span></div>
+            <div class="info-row"><span class="info-k">Kibocsátó CA</span><span class="info-v">ForensicCA · ForensicApp · HU</span></div>
+            <div class="info-row"><span class="info-k">Subject</span><span class="info-v">ForensicEvidence · HU</span></div>
+            <div class="info-row"><span class="info-k">Érvényes TÓL</span><span class="info-v">2026-02-21</span></div>
+            <div class="info-row"><span class="info-k">Érvényes IG</span><span class="info-v green">2031-02-20 ✓</span></div>
+            <div class="info-row"><span class="info-k">Cert típus</span><span class="info-v">BouncyCastle RSA-2048</span></div>
+            <div class="info-row"><span class="info-k">Aláírás alg.</span><span class="info-v">SHA512withRSA</span></div>
+            <div style="margin-top:10px;background:#060a10;border-radius:8px;padding:10px;">
+              <div style="font-size:10px;color:#64748b;margin-bottom:5px;">Aláírás (Base64, első 96 kar.):</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#334155;word-break:break-all;line-height:1.7;">K9iBt0s9eVQiMMutU6Q9J0dQrLoDBigtY1Mwe4jQbAl326O4VOnkZOSISuVXLikvSfjKSmrCbBKVyRDXfvvZ11aUO+7u...</div>
+              <button onclick="copyH('K9iBt0s9eVQiMMutU6Q9J0dQrLoDBigtY1Mwe4jQbAl326O4VOnkZOSISuVXLikvSfjKSmrCbBKVyRDXfvvZ11aUO+7uaGykuxEfIYi1/uJtQcm1gr66oIQo6AqmliUVGnBrqZuTzqka9eTGi4IVWVgGp2FNxwD1cw3KKTN8p+IU1R6TEhqM2Nf4TnxbZewIj1WYyeN0fLdo0LR8MuYVGlymEgRt2Hh+3exkhuOibBPklz0zHs0zT2nnm1IGH39XCCv6hlTzXzldgenhc+ZsihBiSF0u9JqWRIJqCWYrWLK7MaRtjr1nB1bKI5NKK1oWsIOLhPPbUxhzlSX0EFbVzA==',this)" class="hash-copy" style="margin-top:6px;font-size:10px;">⎘ Teljes aláírás másolása</button>
+            </div>
+          </div>
+
+          <!-- DEVICE -->
+          <div class="vcard">
+            <h4>📱 Eszköz & Hardver</h4>
+            <div class="info-row"><span class="info-k">Gyártó / Modell</span><span class="info-v">Motorola Razr 40 Ultra</span></div>
+            <div class="info-row"><span class="info-k">OS</span><span class="info-v">Android 15 / API-35</span></div>
+            <div class="info-row"><span class="info-k">Build</span><span class="info-v mono" style="font-size:9px;">V1TZS35H.41-21-3-21 / 0e96f2-6966ce</span></div>
+            <div class="info-row"><span class="info-k">Rendszer nyelv</span><span class="info-v">Magyar (Hungarian)</span></div>
+            <div class="info-row"><span class="info-k">App verzió</span><span class="info-v">ForensicChain 1.0.0</span></div>
+            <div class="info-row"><span class="info-k">Unity engine</span><span class="info-v">2022.3.50f1</span></div>
+            <div class="info-row"><span class="info-k">CPU</span><span class="info-v">ARM64 FP ASIMD AES</span></div>
+            <div class="info-row"><span class="info-k">CPU magok</span><span class="info-v">8 mag</span></div>
+            <div class="info-row"><span class="info-k">GPU</span><span class="info-v">Adreno (TM) 730</span></div>
+            <div class="info-row"><span class="info-k">RAM</span><span class="info-v">7 284 MB</span></div>
+            <div class="info-row"><span class="info-k">Szenzor méret</span><span class="info-v">5,69 × 4,35 mm</span></div>
+            <div class="info-row"><span class="info-k">Rekesznyílás</span><span class="info-v">f/1,5</span></div>
+            <div class="info-row"><span class="info-k">Gyújtótávolság</span><span class="info-v">4,15 mm</span></div>
+            <div class="info-row"><span class="info-k">Kamera ID</span><span class="info-v">0</span></div>
+            <div class="info-row"><span class="info-k">Flash</span><span class="info-v">Nem használt</span></div>
+            <div class="info-row"><span class="info-k">Akkumulátor</span><span class="info-v green">100% · Discharging</span></div>
+            <div class="info-row"><span class="info-k">Tájolás</span><span class="info-v">Portrait</span></div>
+            <div class="info-row"><span class="info-k">Gyorsulásmérő</span><span class="info-v">0,0 / 0,0 / 0,0 (álló)</span></div>
+            <div style="margin-top:8px;background:#060a10;border-radius:6px;padding:8px;">
+              <div style="font-size:10px;color:#64748b;margin-bottom:3px;">Device Fingerprint:</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#334155;">4608300BC60E45D557E20F23C4118B6C9F2FD17D73CEBA70042BE533A551E4F8</div>
+            </div>
+          </div>
+
+          <!-- NETWORK -->
+          <div class="vcard">
+            <h4>🌐 Hálózati adatok</h4>
+            <div class="info-row"><span class="info-k">WiFi SSID</span><span class="info-v">Gal</span></div>
+            <div class="info-row"><span class="info-k">WiFi BSSID (MAC)</span><span class="info-v mono">78:96:82:7b:84:f9</span></div>
+            <div class="info-row"><span class="info-k">Jelerősség</span><span class="info-v green">-41 dBm · Kiváló</span></div>
+            <div class="info-row"><span class="info-k">Lokális IP</span><span class="info-v mono">192.168.1.16</span></div>
+            <div class="info-row"><span class="info-k">Publikus IP (IPv6)</span><span class="info-v mono" style="font-size:9px;">2001:4c4e:138c:ba00:...</span></div>
+            <div class="info-row"><span class="info-k">WiFi MAC</span><span class="info-v mono">02:00:00:00:00:00</span></div>
+            <div class="info-row"><span class="info-k">Mobilszolgáltató</span><span class="info-v">Telekom HU</span></div>
+            <div class="info-row"><span class="info-k">Cellatorony ID</span><span class="info-v mono">186881</span></div>
+            <div class="info-row"><span class="info-k">Location Area Code</span><span class="info-v mono">270</span></div>
+            <div class="info-row"><span class="info-k">MCC / MNC</span><span class="info-v mono">216 / 30</span></div>
+            <div class="info-row"><span class="info-k">Hálózati idő</span><span class="info-v mono">2026-02-27T15:13:18Z</span></div>
+          </div>
+
+          <!-- NTP -->
+          <div class="vcard">
+            <h4>⏱️ NTP Idő-szinkronizáció</h4>
+            <div class="info-row"><span class="info-k">NTP szerver</span><span class="info-v green">pool.ntp.org ✓</span></div>
+            <div class="info-row"><span class="info-k">NTP válasz (UTC)</span><span class="info-v mono">2026-02-27T15:13:25.725Z</span></div>
+            <div class="info-row"><span class="info-k">Round-trip késés</span><span class="info-v green">65 ms ✓</span></div>
+            <div class="info-row"><span class="info-k">Óra eltérés</span><span class="info-v amber">1 306 ms (elfogadható)</span></div>
+            <div class="info-row"><span class="info-k">Stratum szint</span><span class="info-v">2 (pontos forrás)</span></div>
+            <div class="info-row"><span class="info-k">DST aktív</span><span class="info-v">Nem</span></div>
+            <div class="info-row"><span class="info-k">Boot idő</span><span class="info-v mono">2026-02-27T13:41:07Z</span></div>
+            <div class="info-row"><span class="info-k">Elapsed realtime</span><span class="info-v mono">5 536 916 ms</span></div>
+            <div class="info-row"><span class="info-k">System millis</span><span class="info-v mono">1 772 205 204 453</span></div>
+            <div style="margin-top:10px;padding:10px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.15);border-radius:8px;font-size:11px;color:#34d399;">✓ NTP szinkronizáció érvényes. Az 1306 ms eltérés forensic szempontból elfogadható határon belül van.</div>
+          </div>
+
+          <!-- COC FULL -->
+          <div class="vcard full">
+            <h4>🔗 Chain of Custody — Teljes eseménylánc</h4>
+            <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:20px;">
+              <div>
+                <div class="coc-entry">
+                  <div class="coc-event"><span style="font-size:16px;">🟢</span> #1 — CAPTURE · 2026-02-27T15:13:18.239Z</div>
+                  <div class="coc-detail">
+                    <span class="hl">Actor:</span> OPERATOR_438a757756eca4ecc299161e1d3f7c9a<br>
+                    <span class="hl">Action:</span> 0 — CAPTURE (kezdeti forensic rögzítés)<br>
+                    <span class="hl">Location:</span> Balatonalmádi, HU · ██.████°N ██.████°E<br>
+                    <span class="hl">File Hash:</span> C9F3CC13F5852D4704C99852E066CD9B...<br>
+                    <span class="hl">Event Hash:</span> EAF82C57DCA4AD3B18F35AE453C8D077...<br>
+                    <span class="hl">Prev Hash:</span> — (lánc kezdete, nincs előző)<br>
+                    <span class="hl">Signature:</span> K9iBt0s9eVQiMMutU6Q9J0dQrLoDB...<br>
+                    <span class="hl">Notes:</span> —<br>
+                    <span class="hl">Integrity:</span> <span style="color:#34d399;font-weight:700;">✓ VALID</span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div style="background:#060a10;border:1px solid #1e3a5f;border-radius:10px;padding:16px;">
+                  <div style="font-size:11px;font-weight:700;color:#38bdf8;margin-bottom:12px;">📊 Custody összesítő</div>
+                  <div class="info-row"><span class="info-k">Összes esemény</span><span class="info-v green">1</span></div>
+                  <div class="info-row"><span class="info-k">Létrehozva</span><span class="info-v mono">2026-02-27 15:13:18Z</span></div>
+                  <div class="info-row"><span class="info-k">Evidence típus</span><span class="info-v">0 (PHOTO)</span></div>
+                  <div class="info-row"><span class="info-k">Lánc integritás</span><span class="info-v green">✓ VALID</span></div>
+                  <div style="margin-top:12px;">
+                    <div style="font-size:10px;color:#64748b;margin-bottom:5px;">Custody integritás hash:</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#334155;word-break:break-all;line-height:1.8;padding:8px;background:#0a0d14;border-radius:6px;">CDFE511EDDB25CA228B227427B5F928E<br>25C3929118DE43F00AC13A1F8DCC39D7<br>AAB6BA2D95CD42FCA1D6B0EC23306B08<br>8009ED71AFD3001B2BAF09620CB7ABBA</div>
+                    <button onclick="copyH('CDFE511EDDB25CA228B227427B5F928E25C3929118DE43F00AC13A1F8DCC39D7AAB6BA2D95CD42FCA1D6B0EC23306B088009ED71AFD3001B2BAF09620CB7ABBA',this)" class="hash-copy" style="margin-top:6px;font-size:10px;width:100%;">⎘ Integrity hash másolása</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /vcard-grid -->
+      </div><!-- /demo-cards -->
+    </div><!-- /sim-box -->
+  </div><!-- /sim-demo-panel -->
+</section>
+<hr class="div">
+
+<!-- WORKFLOW -->
+<section id="workflow">
+  <div class="section-title">Munkafolyamat</div>
+  <h2 class="section-heading">A teljes bizonyítékkezelési folyamat</h2>
+  <p class="section-sub">A rögzítés pillanatától a bírósági dokumentációig.</p>
+  <div class="steps-grid">
+    <div class="step"><div class="sn">1</div><div class="sc"><h4>Ügy létrehozása</h4><p>Unity kliensben QR-kártyás azonosítás.</p></div></div>
+    <div class="step"><div class="sn">2</div><div class="sc"><h4>Helyszíni rögzítés</h4><p>Android appban fotó/videó/hang GPS metaadattal.</p></div></div>
+    <div class="step"><div class="sn">3</div><div class="sc"><h4>Kettős időbélyegzés</h4><p>RFC 3161 + Bitcoin blokklánc párhuzamosan.</p></div></div>
+    <div class="step"><div class="sn">4</div><div class="sc"><h4>FCE2 feltöltés</h4><p>AES-256 titkosított archívum automatikusan.</p></div></div>
+    <div class="step"><div class="sn">5</div><div class="sc"><h4>Irodai elemzés</h4><p>Desktop: 7 fázisú RSA, hash-validálás.</p></div></div>
+    <div class="step"><div class="sn">6</div><div class="sc"><h4>Ügykövetés</h4><p>Unity: státuszfrissítés, nyilvántartás.</p></div></div>
+    <div class="step"><div class="sn">7</div><div class="sc"><h4>Jogi jelentés</h4><p>HTML-riport Daubert-faktorokkal.</p></div></div>
+    <div class="step"><div class="sn">8</div><div class="sc"><h4>Archiválás</h4><p>Lezárás, összes adat megőrzése.</p></div></div>
+  </div>
+</section>
+<hr class="div">
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-title">Árazás</div>
+  <h2 class="section-heading">Átlátható licencdíjak</h2>
+  <p class="section-sub">Éves használati licenc vagy egyszeri forráskód-megszerzés.</p>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="pc-name">Egység Licenc</div>
+      <div class="pc-price">490 000 Ft<span> / év</span></div>
+      <div class="pc-sub">1 helyszín · max. 3 felhasználó</div>
+      <div class="pc-feats">
+        <div class="pc-f">Android (3 eszköz)</div><div class="pc-f">Desktop elemző</div><div class="pc-f">Unity kliens</div><div class="pc-f">Frissítések</div><div class="pc-f">E-mail support</div><div class="pc-f no">Helyszíni telepítés</div><div class="pc-f no">API integráció</div>
+      </div>
+      <button class="pc-btn secondary" onclick="openQuote('Egység Licenc')">Árajánlat kérése</button>
+    </div>
+    <div class="price-card featured">
+      <div class="pc-name">Professional</div>
+      <div class="pc-price">990 000 Ft<span> / év</span></div>
+      <div class="pc-sub">1 szervezet · max. 15 felhasználó</div>
+      <div class="pc-feats">
+        <div class="pc-f">Android (15 eszköz)</div><div class="pc-f">Desktop elemző</div><div class="pc-f">Unity kliens</div><div class="pc-f">Frissítések</div><div class="pc-f">Telefonos support</div><div class="pc-f">Helyszíni telepítés (1×)</div><div class="pc-f no">API integráció</div>
+      </div>
+      <button class="pc-btn primary" onclick="openQuote('Professional')">Árajánlat kérése</button>
+    </div>
+    <div class="price-card">
+      <div class="pc-name">Enterprise</div>
+      <div class="pc-price">2 490 000 Ft<span> / évtől</span></div>
+      <div class="pc-sub">Korlátlan · Többhelyszínes · eIDAS</div>
+      <div class="pc-feats">
+        <div class="pc-f">Android (korlátlan)</div><div class="pc-f">Desktop elemző</div><div class="pc-f">Unity kliens</div><div class="pc-f">Prioritás frissítések</div><div class="pc-f">Dedikált support</div><div class="pc-f">Telepítés + oktatás</div><div class="pc-f">API integráció</div>
+      </div>
+      <button class="pc-btn secondary" onclick="openQuote('Enterprise')">Kapcsolatfelvétel</button>
+    </div>
+    <div class="price-card source">
+      <div class="pc-name">Forráskód Licenc</div>
+      <div class="pc-price" style="color:#f59e0b;font-size:20px;">24,9M – 49,9M Ft<span style="color:#78350f;"> egyszeri</span></div>
+      <div class="pc-sub">Teljes átadás · White-label jog</div>
+      <div class="pc-feats">
+        <div class="pc-f gold">Android+Unity+Desktop forrás</div><div class="pc-f gold">Teljes dokumentáció</div><div class="pc-f gold">White-label / újracímkézés</div><div class="pc-f gold">Saját márka alatti értékesítés</div><div class="pc-f gold">Dedikált átadási support</div><div class="pc-f gold">API integráció</div><div class="pc-f gold">Örökös licenc</div>
+      </div>
+      <button class="pc-btn gold-btn" onclick="openQuote('Forráskód Licenc')">Érdeklődöm</button>
+    </div>
+  </div>
+  <div class="price-note"><strong>ℹ️ Minden csomag tartalmazza</strong> a teljes rendszert. Nettó árak, ÁFA törvényi mértékével. Megújítási kedvezmény: 15%. Rendvédelmi kedvezmény igényelhető.</div>
+  <div class="api-note"><div style="font-size:20px;">🔗</div><div><strong style="color:#38bdf8;">Infrastruktúra-megjegyzés:</strong> Az OpenTimestamps és FreeTSA <strong>ingyenes</strong>. Az eIDAS/OCSP integrációt a vevő saját API kulccsal üzemelteti — nincsenek rejtett szerverköltségek.</div></div>
+  <div class="section-title" style="margin-bottom:16px;">Következő lépések</div>
+  <div class="nextsteps">
+    <div class="ns"><div class="ns-num">1</div><h4>Igény felmérés</h4><p>30 perces online konzultáció.</p></div>
+    <div class="ns"><div class="ns-num">2</div><h4>Demo bemutató</h4><p>Személyre szabott demó.</p></div>
+    <div class="ns"><div class="ns-num">3</div><h4>Próba licenc</h4><p>30 napos ingyenes próba.</p></div>
+    <div class="ns"><div class="ns-num">4</div><h4>Bevezetés</h4><p>Telepítés + oktatás.</p></div>
+  </div>
+</section>
+<hr class="div">
+
+<!-- TECHNICAL -->
+<section id="technical">
+  <div class="section-title">Technikai részletek</div>
+  <h2 class="section-heading">Rendszerkövetelmények és összehasonlítás</h2>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <div class="section-title" style="margin:0;">Platform összehasonlítás</div>
+    <a href="#" class="pdf-btn" onclick="generatePDF(event)">📥 Műszaki katalógus (PDF)</a>
+  </div>
+  <table class="cmp-table"><thead><tr><th>Funkció</th><th>🖥️ Desktop</th><th>🎮 Unity</th><th>📱 Android</th></tr></thead><tbody id="cmp-tbody"></tbody></table>
+  <div class="section-title" style="margin-bottom:16px;">Rendszerkövetelmények</div>
+  <div class="sysreq-grid">
+    <div class="sysreq-card"><h4>🖥️ Desktop</h4><div class="req-row"><span class="rk">OS</span><span class="rv">Win 10+ / Ubuntu 20.04+</span></div><div class="req-row"><span class="rk">CPU</span><span class="rv">i5 / Ryzen 5 (min: i3)</span></div><div class="req-row"><span class="rk">RAM</span><span class="rv">8 GB (min: 4 GB)</span></div><div class="req-row"><span class="rk">Tárhely</span><span class="rv">10 GB SSD</span></div><div class="req-row"><span class="rk">Python</span><span class="rv">3.10+</span></div><div class="req-row"><span class="rk">Docker</span><span class="rv">20.10+</span></div></div>
+    <div class="sysreq-card"><h4>🎮 Unity Kliens</h4><div class="req-row"><span class="rk">OS</span><span class="rv">Win 10+ / macOS 12+</span></div><div class="req-row"><span class="rk">CPU</span><span class="rv">i5 / Apple M1</span></div><div class="req-row"><span class="rk">RAM</span><span class="rv">8 GB (min: 4 GB)</span></div><div class="req-row"><span class="rk">GPU</span><span class="rv">DirectX 11</span></div><div class="req-row"><span class="rk">Tárhely</span><span class="rv">4 GB</span></div><div class="req-row"><span class="rk">Hálózat</span><span class="rv">100 Mbps ajánlott</span></div></div>
+    <div class="sysreq-card"><h4>📱 Android</h4><div class="req-row"><span class="rk">Android</span><span class="rv">13+ (min: 9)</span></div><div class="req-row"><span class="rk">RAM</span><span class="rv">4 GB (min: 2 GB)</span></div><div class="req-row"><span class="rk">Tároló</span><span class="rv">2 GB szabad</span></div><div class="req-row"><span class="rk">GPS</span><span class="rv">Hardware chip</span></div><div class="req-row"><span class="rk">Kamera</span><span class="rv">12 MP+ ajánlott</span></div><div class="req-row"><span class="rk">Hálózat</span><span class="rv">WiFi / 4G / 5G</span></div></div>
+  </div>
+  <div style="margin-bottom:40px;"><div class="section-title" style="margin-bottom:16px;">Megfelelőség</div><div class="tags"><span class="tag">✔ Daubert</span><span class="tag">✔ RFC 3161</span><span class="tag">✔ SHA-512</span><span class="tag">✔ RSA 7-fázis</span><span class="tag">✔ OCSP</span><span class="tag">✔ AES-256</span><span class="tag">✔ NIST SP 800-101</span><span class="tag">✔ ISO/IEC 27037</span><span class="tag">✔ Bitcoin OTS</span><span class="tag">✔ NTP RFC 5905</span><span class="tag">✔ Magyar IRM</span></div></div>
+</section>
+<hr class="div">
+
+<!-- USE CASES -->
+<section id="usecases">
+  <div class="section-title">Felhasználási területek</div>
+  <h2 class="section-heading">Valós alkalmazási esetek</h2>
+  <div class="uc-grid">
+    <div class="uc"><div class="ui">🔎</div><h4>Helyszínelés</h4><p>Nyomozói fotók GPS-rögzítéssel.</p></div>
+    <div class="uc"><div class="ui">⚖️</div><h4>Végrehajtás</h4><p>Vagyontárgyak hitelesített dokumentálása.</p></div>
+    <div class="uc"><div class="ui">🏭</div><h4>Munkahelyi balesetek</h4><p>Időbélyegzett baleseti helyszín.</p></div>
+    <div class="uc"><div class="ui">🌿</div><h4>Környezetvédelem</h4><p>Szennyezések GPS-koordinátás rögzítése.</p></div>
+    <div class="uc"><div class="ui">🏦</div><h4>Biztosítói kárfelmérés</h4><p>Manipulálhatatlan dokumentáció.</p></div>
+    <div class="uc"><div class="ui">🏗️</div><h4>Minőségbiztosítás</h4><p>Kivitelezési folyamatok dokumentálása.</p></div>
+  </div>
+</section>
+<hr class="div">
+
+<!-- CONTACT -->
+<section id="contact" style="padding-bottom:48px;">
+  <div class="cta-box">
+    <h2>Készen áll a ForensicChain bevezetésére?</h2>
+    <p>Lépjen kapcsolatba csapatunkkal demóért, próbalicencért vagy forráskód-ajánlatért.</p>
+    <div class="cta-btns">
+      <a href="mailto:info@forensicchain.hu" class="btn-p">📩 Kapcsolatfelvétel</a>
+      <a href="#" class="btn-s" onclick="openQuote('Demo');return false;">📋 Demo igénylése</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="brand">⬡ ForensicChain</div>
+  <p>© 2025 ForensicChain — Minden jog fenntartva. Kizárólag törvényes célokra.</p>
+  <p>v3.3 · Desktop · Unity · Android</p>
+</footer>
+
+<div class="lb" id="lb" onclick="closeLB()">
+  <div class="lb-x">✕</div>
+  <img id="lb-img" src="" alt="">
+  <div class="lb-info">EVIDENCE-20260227-151318-04A77 · original.png · 1920×1080 · SHA-512: C9F3CC13... · Kattintson a bezáráshoz</div>
+</div>
+
+<!-- QUOTE MODAL -->
+<div id="quote-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:400;align-items:center;justify-content:center;">
+  <div style="background:#0f1a2e;border:1px solid #1e3a5f;border-radius:16px;padding:36px;max-width:460px;width:90%;">
+    <div style="font-size:20px;font-weight:800;color:#f1f5f9;margin-bottom:6px;" id="qm-title"></div>
+    <div style="font-size:13px;color:#64748b;margin-bottom:24px;" id="qm-sub"></div>
+    <input id="qm-name" placeholder="Neve" style="width:100%;background:#0a0d14;border:1px solid #1e3a5f;color:#e2e8f0;padding:10px 14px;border-radius:8px;font-family:inherit;font-size:13px;margin-bottom:10px;display:block;">
+    <input id="qm-org" placeholder="Szervezet neve" style="width:100%;background:#0a0d14;border:1px solid #1e3a5f;color:#e2e8f0;padding:10px 14px;border-radius:8px;font-family:inherit;font-size:13px;margin-bottom:10px;display:block;">
+    <input id="qm-email" placeholder="E-mail cím" style="width:100%;background:#0a0d14;border:1px solid #1e3a5f;color:#e2e8f0;padding:10px 14px;border-radius:8px;font-family:inherit;font-size:13px;margin-bottom:10px;display:block;">
+    <textarea id="qm-msg" placeholder="Megjegyzés (opcionális)" rows="3" style="width:100%;background:#0a0d14;border:1px solid #1e3a5f;color:#e2e8f0;padding:10px 14px;border-radius:8px;font-family:inherit;font-size:13px;margin-bottom:16px;resize:vertical;display:block;"></textarea>
+    <div style="display:flex;gap:10px;">
+      <button onclick="submitQuote()" style="flex:1;padding:11px;background:linear-gradient(135deg,#1d4ed8,#0ea5e9);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Küldés</button>
+      <button onclick="closeQuote()" style="padding:11px 20px;background:transparent;color:#64748b;border:1px solid #1e3a5f;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;">Mégse</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══ BG CANVAS ═══
+(function(){
+  const c=document.getElementById('bg-canvas'),ctx=c.getContext('2d');
+  let W,H,nodes=[];
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}
+  resize();window.addEventListener('resize',resize);
+  const CHARS='ATCG0189ABCDEFabcdef⬡⬢◈';
+  for(let i=0;i<110;i++)nodes.push({x:Math.random()*2000,y:Math.random()*1200,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.3,ch:CHARS[Math.floor(Math.random()*CHARS.length)],size:11+Math.random()*9,opacity:Math.random()*.55+.25,tick:Math.random()*300});
+  const strands=[];
+  for(let s=0;s<4;s++)strands.push({x:Math.random()*1800,speed:.18+Math.random()*.25,phase:Math.random()*Math.PI*2});
+  function draw(){
+    ctx.clearRect(0,0,W,H);const t=Date.now()/1000;
+    strands.forEach(st=>{const x=(st.x+t*st.speed*50)%W;for(let y=0;y<H;y+=26){const wave=Math.sin(y*.03+t*.6+st.phase)*65,alpha=.18+.12*Math.abs(Math.sin(y*.04+t*.3));ctx.beginPath();ctx.arc(x+wave,y,2.5,0,Math.PI*2);ctx.fillStyle=`rgba(56,189,248,${alpha})`;ctx.fill();ctx.beginPath();ctx.arc(x-wave,y,2.5,0,Math.PI*2);ctx.fillStyle=`rgba(139,92,246,${alpha})`;ctx.fill();if(y%52===0){ctx.beginPath();ctx.moveTo(x+wave,y);ctx.lineTo(x-wave,y);ctx.strokeStyle=`rgba(56,189,248,${alpha*.9})`;ctx.lineWidth=1.2;ctx.stroke();}}});
+    nodes.forEach(n=>{n.x+=n.vx;n.y+=n.vy;n.tick++;if(n.x<0)n.x=W;if(n.x>W)n.x=0;if(n.y<0)n.y=H;if(n.y>H)n.y=0;if(n.tick%160===0)n.ch=CHARS[Math.floor(Math.random()*CHARS.length)];const pulse=.75+.25*Math.sin(n.tick*.045);ctx.font=`${n.size}px monospace`;ctx.fillStyle=`rgba(56,189,248,${n.opacity*pulse*.75})`;ctx.fillText(n.ch,n.x,n.y);});
+    ctx.strokeStyle='rgba(56,189,248,0.1)';ctx.lineWidth=.6;const S=40,hh=S*Math.sqrt(3)/2;
+    for(let row=0;row<H/hh+2;row++)for(let col=0;col<W/(S*1.5)+2;col++){const cx=col*S*1.5,cy=row*hh+(col%2===0?0:hh/2);ctx.beginPath();for(let i=0;i<6;i++){const a=Math.PI/180*(60*i-30);i===0?ctx.moveTo(cx+S*Math.cos(a),cy+S*Math.sin(a)):ctx.lineTo(cx+S*Math.cos(a),cy+S*Math.sin(a));}ctx.closePath();ctx.stroke();}
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ═══ LANG stub ═══
+function setLang(lang){document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`.lang-btn[onclick="setLang('${lang}')"]`).classList.add('active');}
+
+// ═══ ROLE ═══
+const roleData={
+  investigator:{desc:'Helyszíni munkára optimalizált.',feats:[{icon:'📱',title:'Android rögzítés',text:'Azonnali forensic csomagba.'},{icon:'📡',title:'GPS validálás',text:'Szimulált GPS automatikus elutasítása.'},{icon:'🔗',title:'Chain of Custody',text:'Minden hozzáférés kriptográfiailag zárolva.'},{icon:'🔌',title:'Offline',text:'Automatikus feltöltés visszaálláskor.'}]},
+  lawyer:{desc:'Jogi eljárásokra optimalizált.',feats:[{icon:'📄',title:'Jogi jelentések',text:'Daubert-faktorokkal.'},{icon:'⛓️',title:'Kettős időbélyeg',text:'RFC 3161 + Bitcoin.'},{icon:'🔗',title:'CoC audit',text:'Teljes auditnyom.'},{icon:'🛡️',title:'RSA 7 fázis',text:'OCSP visszavonás.'}]},
+  judge:{desc:'Igazságügyi szakértői nézet.',feats:[{icon:'🛡️',title:'Kriptográfia',text:'SHA-512, Keccak256, BLAKE3.'},{icon:'⛓️',title:'Blokklánc',text:'Bitcoin blokkláncba rögzített.'},{icon:'📋',title:'Daubert',text:'Tudományos elfogadhatóság.'},{icon:'✅',title:'ISO/IEC 27037',text:'Nemzetközi forensic szabvány.'}]}
+};
+function setRole(r){
+  const ov=document.getElementById('role-overlay');
+  if(!r){ov.style.display='none';document.getElementById('role-banner').style.display='none';return;}
+  const d=roleData[r],names={investigator:'Nyomozó',lawyer:'Ügyvéd',judge:'Bíró'};
+  document.getElementById('ro-title').textContent=names[r];
+  document.getElementById('ro-desc').textContent=d.desc;
+  document.getElementById('ro-features').innerHTML=d.feats.map(f=>`<div class="ro-feat"><div style="font-size:18px;flex-shrink:0;">${f.icon}</div><div><div style="font-size:12px;font-weight:700;color:#e2e8f0;margin-bottom:2px;">${f.title}</div><div style="font-size:11px;color:#475569;">${f.text}</div></div></div>`).join('');
+  ov.className='';ov.classList.add('role-'+r);ov.style.display='block';
+  const b=document.getElementById('role-banner');
+  b.innerHTML=`<strong>👤 ${names[r]} nézet aktív</strong>`;b.style.display='block';
+}
+function clearRole(){document.getElementById('role-sel').value='';setRole('');}
+
+// ═══ PLATFORM ═══
+function switchP(id,btn){
+  document.querySelectorAll('.ppanel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pp-'+id).classList.add('active');btn.classList.add('active');
+}
+
+// ═══ SCREENSHOT ═══
+const scData={desktop:{imgs:[],idx:0},unity:{imgs:[],idx:0},android:{imgs:[],idx:0}};
+function handleUp(p,inp){Array.from(inp.files).forEach(f=>scData[p].imgs.push(URL.createObjectURL(f)));renderSC(p);inp.value='';}
+function renderSC(p){
+  const d=scData[p];if(!d.imgs.length)return;
+  const el=document.getElementById('sc-'+p);
+  el.innerHTML=`<div class="sc-carousel"><img src="${d.imgs[d.idx]}" onclick="openLB('${d.imgs[d.idx]}')" alt="sc">${d.imgs.length>1?`<div class="sc-ctrl"><div class="sc-arr" onclick="scPrev('${p}')">‹</div><div class="sc-arr" onclick="scNext('${p}')">›</div></div><div class="sc-dots">${d.imgs.map((_,j)=>`<div class="sc-d ${j===d.idx?'active':''}" onclick="scGo('${p}',${j})"></div>`).join('')}</div>`:''}</div>`;
+}
+function scNext(p){const d=scData[p];d.idx=(d.idx+1)%d.imgs.length;renderSC(p);}
+function scPrev(p){const d=scData[p];d.idx=(d.idx-1+d.imgs.length)%d.imgs.length;renderSC(p);}
+function scGo(p,i){scData[p].idx=i;renderSC(p);}
+
+// ═══ LIGHTBOX ═══
+function openLB(src){document.getElementById('lb-img').src=src;document.getElementById('lb').classList.add('open');}
+function closeLB(){document.getElementById('lb').classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLB();closeQuote();}});
+
+// ═══ FMAP ═══
+const fmapData=[
+  {ico:'🔍',title:'Bizonyítékcsomag-ellenőrzés',desc:'ZIP és FCE formátumú csomagok teljes vizsgálata.',plats:['d']},
+  {ico:'⛓️',title:'Bitcoin időbélyegzés',desc:'OpenTimestamps kettős időbélyeg.',plats:['d','m']},
+  {ico:'🔗',title:'Chain of Custody',desc:'Kriptográfiai eseménylánc.',plats:['d','u','m']},
+  {ico:'📄',title:'Jogi jelentés',desc:'Magyar, amerikai, német sablonok.',plats:['d']},
+  {ico:'📡',title:'GPS validálás',desc:'Szimulált GPS automatikusan elutasítva.',plats:['d','m']},
+  {ico:'🛡️',title:'7 fázisú RSA',desc:'Tanúsítványlánc, OCSP-visszavonás.',plats:['d']},
+  {ico:'📸',title:'Helyszíni rögzítés',desc:'Fotó, videó, hang forensic csomagba.',plats:['m']},
+  {ico:'🗃️',title:'Ügykezelés',desc:'Ügyek létrehozása, státuszkezelés.',plats:['u']},
+  {ico:'👤',title:'Személyzetkezelés',desc:'QR-kódos azonosítás.',plats:['u','m']},
+];
+const pNames={d:'Desktop',u:'Unity',m:'Android'};
+function buildFmap(){
+  document.getElementById('fmap-grid').innerHTML=fmapData.map((f,i)=>`<div class="fmap-item" onclick="showFmap(${i})" id="fmi-${i}"><div class="fmi">${f.ico}</div><h4>${f.title}</h4><div style="font-size:11px;color:#475569;">${f.plats.map(p=>pNames[p]).join(' · ')}</div></div>`).join('');
+}
+function showFmap(i){
+  document.querySelectorAll('.fmap-item').forEach(el=>el.classList.remove('sel'));
+  document.getElementById('fmi-'+i).classList.add('sel');
+  const f=fmapData[i];
+  document.getElementById('fmd-title').textContent=f.title;
+  document.getElementById('fmd-desc').textContent=f.desc;
+  document.getElementById('fmd-plats').innerHTML=f.plats.map(p=>`<span class="fplat ${p}">${pNames[p]}</span>`).join('');
+  document.getElementById('fmap-detail').classList.add('vis');
+}
+buildFmap();
+
+// ═══ CMP TABLE ═══
+const cmpRows=[
+  ['Bizonyítékcsomag megnyitása','✓','✓','✓'],['SHA-512 / Keccak256','✓','—','✓'],['7 fázisú RSA','✓','—','—'],['OCSP visszavonás','✓','—','—'],['RFC 3161 időbélyeg','✓','—','✓'],['Bitcoin OTS','✓','—','✓'],['Chain of Custody','✓','✓','✓'],['Helyszíni rögzítés','—','—','✓'],['GPS validálás','✓','—','✓'],['Szimulált GPS érzékelés','—','—','✓'],['Ügykezelés','—','✓','—'],['Személyzetkezelés + QR','—','✓','✓'],['Médianézegető','✓','✓','—'],['Jogi jelentésgenerálás','✓','—','—'],['Offline működés','—','—','✓'],['Docker FileBrowser','✓','—','—'],['Magyar/Angol felület','✓','✓','✓'],
+];
+function buildCmpTable(){document.getElementById('cmp-tbody').innerHTML=cmpRows.map(r=>`<tr><td>${r[0]}</td>${r.slice(1).map(v=>`<td>${v==='✓'?'<span class="chk">✓</span>':v==='—'?'<span class="dash">—</span>':v}</td>`).join('')}</tr>`).join('');}
+buildCmpTable();
+
+// ═══ SIM TAB ═══
+function switchSimTab(tab){
+  const isDemo=tab==='demo';
+  document.getElementById('sim-upload-panel').style.display=isDemo?'none':'block';
+  document.getElementById('sim-demo-panel').style.display=isDemo?'block':'none';
+  const base='padding:9px 22px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;';
+  document.getElementById('tab-sim').style.cssText=base+(isDemo?'background:#0f1a2e;border:1px solid #1e3a5f;color:#64748b;':'background:rgba(59,130,246,.15);border:1px solid #3b82f6;color:#60a5fa;');
+  document.getElementById('tab-demo').style.cssText=base+(isDemo?'background:rgba(239,68,68,.12);border:1px solid #ef4444;color:#f87171;':'background:#0f1a2e;border:1px solid #1e3a5f;color:#64748b;');
+}
+
+// ═══ UPLOAD SIM ═══
+function simDrop(e){e.preventDefault();const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))runSim(f);}
+async function runSim(file){
+  if(!file)return;
+  document.getElementById('sim-steps').style.display='block';
+  document.getElementById('sim-result').style.display='none';
+  document.getElementById('sim-drop').style.display='none';
+  for(let i=0;i<7;i++){
+    document.querySelectorAll('#sim-upload-panel .sim-step-row').forEach((r,j)=>{r.classList.remove('active','done');if(j<i)r.classList.add('done');if(j===i)r.classList.add('active');});
+    await delay(700+Math.random()*400);
+    let val='';
+    if(i===0)val=`${file.name} · ${(file.size/1024).toFixed(1)} KB · ${file.type}`;
+    else if(i===1){try{const buf=await file.arrayBuffer();const h=await crypto.subtle.digest('SHA-256',buf);val=Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('').substring(0,32)+'...';}catch{val='a3f8c2e1...'+Math.random().toString(16).slice(2,10);}}
+    else if(i===2)val='RSA-SIG:'+Math.random().toString(36).slice(2,18).toUpperCase();
+    else if(i===3)val=`RFC3161 · ${new Date().toISOString()} · freetsa.org`;
+    else if(i===4)val='OTS:'+Math.random().toString(16).slice(2,18)+' · PENDING';
+    else if(i===5)val='COC-'+Date.now()+' · INIT · '+new Date().toLocaleTimeString();
+    else if(i===6)val=`FCE2://${Math.random().toString(36).slice(2,10)}.fce2 · AES-256-GCM`;
+    document.getElementById('sv'+i).textContent=val;
+  }
+  document.querySelectorAll('#sim-upload-panel .sim-step-row').forEach(r=>{r.classList.remove('active');r.classList.add('done');});
+  document.getElementById('sim-result').style.display='block';
+  document.getElementById('sim-summary').textContent=` ${file.name} · ${(file.size/1024).toFixed(1)} KB`;
+}
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ═══ DEMO VERIFIER ═══
+const DEMO_STEPS=[
+  {val:'EVIDENCE-20260227-151318-04A77 · 2026-02-27T15:13:18.239Z · Motorola Razr 40 Ultra · Android 15 · Session: SESSION-20260227134120-0595AE3E',status:'ok',label:'AZONOSÍTVA',delay:900},
+  {val:'SHA-512: C9F3CC13F5852D47... ✓\nSHA-256: 1A156D91D076E6D8... ✓\nBLAKE3:  CFC96A7798750C9F... ✓\nKeccak:  C2D2D08B047C03C0... ✓',status:'ok',label:'4/4 EGYEZIK',delay:1200},
+  {val:'ForensicCA → ForensicEvidence · SHA512withRSA · 2026-02-21 – 2031-02-20 · Aláírás: K9iBt0s9eVQi... · VALID',status:'ok',label:'ÉRVÉNYES',delay:1000},
+  {val:'FreeTSA RFC 3161 · Serial: 54935813 · 2026-02-27T15:13:27Z · freetsa.org · Stratum szint: 2 · VALID',status:'ok',label:'HITELESÍTVE',delay:1000},
+  {val:'3 naptár elküldve: bob.btc.calendar.opentimestamps.org · finney.calendar.eternitywall.com · btc.calendar.catallaxy.com · Beküldés: 2026-02-27T15:13:30Z',status:'pend',label:'PENDING',delay:900},
+  {val:'Balatonalmádi, Veszprém m., HU · ██.████°N ██.████°E · Tengerszint: 154,2m · Pontosság: ±100m · Provider: network · Szimulált GPS: NEM ✓',status:'ok',label:'GPS VALID',delay:1000},
+  {val:'1 esemény · CAPTURE · OPERATOR_438a757756eca4ecc299161e1d3f7c9a · Hash lánc: EAF82C57... → CDFE511E... · VALID',status:'ok',label:'LÁNC VALID',delay:800},
+];
+
+let demoRunning=false,leafletMap=null;
+
+async function runDemoVerify(){
+  if(demoRunning)return;
+  demoRunning=true;
+  const btn=document.getElementById('demo-launch-btn');
+  btn.disabled=true;
+  btn.innerHTML='<span style="display:inline-block;animation:spin 1s linear infinite;font-size:20px;">⟳</span> Verifikáció folyamatban...';
+  document.getElementById('demo-steps').style.display='block';
+  document.getElementById('demo-cards').style.display='none';
+  const prog=document.getElementById('demo-progress');
+  const label=document.getElementById('demo-progress-label');
+
+  for(let i=0;i<DEMO_STEPS.length;i++){
+    // activate current
+    document.querySelectorAll('.demo-step-row').forEach((r,j)=>{
+      r.classList.remove('active','done');
+      if(j<i)r.classList.add('done');
+      if(j===i)r.classList.add('active');
+    });
+    const pct=Math.round((i/DEMO_STEPS.length)*100);
+    prog.style.width=pct+'%';
+    label.textContent=`Lépés ${i+1} / ${DEMO_STEPS.length} — ${['Csomag azonosítása','Hash ellenőrzés','RSA hitelesítés','RFC 3161 időbélyeg','Bitcoin OTS','GPS audit','Chain of Custody'][i]}...`;
+    await delay(DEMO_STEPS[i].delay);
+    // show value + status badge
+    const valEl=document.getElementById('dv'+i);
+    valEl.textContent=DEMO_STEPS[i].val;
+    valEl.style.display='block';
+    const stEl=document.getElementById('dst'+i);
+    stEl.textContent=DEMO_STEPS[i].label;
+    stEl.className='dsi-status '+DEMO_STEPS[i].status;
+    stEl.style.display='block';
+  }
+  // all done
+  document.querySelectorAll('.demo-step-row').forEach(r=>{r.classList.remove('active');r.classList.add('done');});
+  prog.style.width='100%';
+  label.textContent='✅ Verifikáció befejezve — 7/7 ellenőrzés sikeres!';
+  await delay(500);
+
+  // load image
+  const imgEl=document.getElementById('demo-img');
+  try{
+    const imgData=await window.fs.readFile('original.png');
+    const blob=new Blob([imgData],{type:'image/png'});
+    imgEl.src=URL.createObjectURL(blob);
+  }catch(e){
+    imgEl.src='data:image/svg+xml;base64,'+btoa(`<svg xmlns='http://www.w3.org/2000/svg' width='480' height='270' viewBox='0 0 480 270'><rect width='480' height='270' fill='%230a0d14'/><rect x='20' y='20' width='440' height='230' rx='10' fill='%230f1a2e' stroke='%231e3a5f' stroke-width='1'/><text x='240' y='100' text-anchor='middle' fill='%2338bdf8' font-size='40'>📸</text><text x='240' y='138' text-anchor='middle' fill='%2394a3b8' font-size='13' font-family='monospace'>original.png — töltse fel a chatbe</text><text x='240' y='160' text-anchor='middle' fill='%23475569' font-size='11' font-family='monospace'>1920 × 1080 · PNG · SHA-512 ✓</text><text x='240' y='185' text-anchor='middle' fill='%2334d399' font-size='10' font-family='monospace'>EVIDENCE-20260227-151318-04A77</text><text x='240' y='205' text-anchor='middle' fill='%23334155' font-size='10' font-family='monospace'>Motorola Razr 40 Ultra · CAMERA_LIVE</text></svg>`);
+  }
+
+  // show cards
+  document.getElementById('demo-cards').style.display='block';
+
+  // init leaflet map
+  await delay(200);
+  initLeafletMap();
+
+  // scroll to cards
+  await delay(300);
+  document.getElementById('demo-cards').scrollIntoView({behavior:'smooth',block:'start'});
+
+  btn.innerHTML='🔄 Újrafuttatás';
+  btn.disabled=false;
+  demoRunning=false;
+}
+
+function initLeafletMap(){
+  if(leafletMap){leafletMap.remove();leafletMap=null;}
+  const mapEl=document.getElementById('leaflet-map');
+  if(!mapEl)return;
+  // Balatonalmádi center
+  const lat=46.9218, lng=18.0069;
+  leafletMap=L.map('leaflet-map',{zoomControl:true,scrollWheelZoom:false}).setView([lat,lng],14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap',maxZoom:19
+  }).addTo(leafletMap);
+  // Custom marker
+  const icon=L.divIcon({
+    html:`<div style="background:linear-gradient(135deg,#1d4ed8,#0ea5e9);width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 4px 16px rgba(59,130,246,.6);display:flex;align-items:center;justify-content:center;"><div style="transform:rotate(45deg);font-size:14px;">📍</div></div>`,
+    className:'',iconSize:[36,36],iconAnchor:[18,36],popupAnchor:[0,-36]
+  });
+  const marker=L.marker([lat,lng],{icon}).addTo(leafletMap);
+  marker.bindPopup(`
+    <div style="font-family:'Inter',sans-serif;min-width:200px;padding:4px;">
+      <div style="font-size:13px;font-weight:800;color:#1d4ed8;margin-bottom:6px;">📍 Forensic helyszín</div>
+      <div style="font-size:11px;color:#374151;line-height:1.8;">
+        <b>Helyszín:</b> Balatonalmádi<br>
+        <b>Megye:</b> Veszprém<br>
+        <b>Ország:</b> Magyarország<br>
+        <b>Koordináta:</b> ██.████°N · ██.████°E<br>
+        <b>Pontosság:</b> ±100,0 m<br>
+        <b>Tengerszint:</b> 154,2 m<br>
+        <b>GPS típus:</b> Hálózat-alapú<br>
+        <b>Szimulált GPS:</b> ❌ Nem<br>
+        <b>Időpont:</b> 2026-02-27 15:13:15Z
+      </div>
+    </div>
+  `).openPopup();
+  // radius circle
+  L.circle([lat,lng],{radius:100,color:'#3b82f6',fillColor:'#3b82f6',fillOpacity:0.12,weight:2}).addTo(leafletMap);
+}
+
+// ═══ COPY ═══
+function copyH(val,btn){
+  navigator.clipboard.writeText(val).then(()=>{
+    const orig=btn.innerHTML;btn.innerHTML='✓ Másolva!';btn.classList.add('copied');
+    setTimeout(()=>{btn.innerHTML=orig;btn.classList.remove('copied');},1600);
+  }).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=val;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    btn.innerHTML='✓';setTimeout(()=>{btn.innerHTML='⎘ Másolás';},1600);
+  });
+}
+
+// ═══ QUOTE ═══
+function openQuote(plan){
+  const subs={'Egység Licenc':'490 000 Ft / év · 1 helyszín · max. 3 felhasználó','Professional':'990 000 Ft / év · max. 15 felhasználó','Enterprise':'2 490 000 Ft / évtől · korlátlan · eIDAS','Forráskód Licenc':'24,9M – 49,9M Ft egyszeri · white-label','Demo':'Ingyenes demo igénylése'};
+  document.getElementById('qm-title').textContent='Árajánlat — '+plan;
+  document.getElementById('qm-sub').textContent=subs[plan]||'';
+  document.getElementById('quote-modal').style.display='flex';
+}
+function closeQuote(){document.getElementById('quote-modal').style.display='none';}
+// ═══ QUOTE SUBMIT — Formspree ═══
+async function submitQuote() {
+  const n = document.getElementById('qm-name').value.trim();
+  const o = document.getElementById('qm-org').value.trim();
+  const e = document.getElementById('qm-email').value.trim();
+  const m = document.getElementById('qm-msg').value.trim();
+  const t = document.getElementById('qm-title').textContent;
+
+  if (!n || !e) {
+    alert('Kérjük töltse ki a kötelező mezőket!');
+    return;
+  }
+
+  const btn = document.querySelector('#quote-modal button');
+  btn.textContent = 'Küldés...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('https://formspree.io/f/mlgwkrwg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        name: n,
+        organization: o,
+        email: e,
+        message: m,
+        package: t
+      })
+    });
+
+    if (res.ok) {
+      closeQuote();
+      // mezők törlése
+      ['qm-name','qm-org','qm-email','qm-msg'].forEach(id => document.getElementById(id).value = '');
+      setTimeout(() => alert(`✅ Köszönjük, ${n}! Hamarosan felvesszük Önnel a kapcsolatot.`), 200);
+    } else {
+      throw new Error('Hiba');
+    }
+  } catch {
+    alert('❌ Küldési hiba. Kérjük írjon közvetlenül: info@forensicchain.hu');
+  } finally {
+    btn.textContent = 'Küldés';
+    btn.disabled = false;
+  }
+}
+
+// ═══ PDF ═══
+function generatePDF(e){
+  e.preventDefault();
+  const txt=`ForensicChain v3.3 Műszaki Katalógus\n\nPlatformok: Desktop · Unity · Android\nFőbb funkciók: SHA-512/BLAKE3/Keccak, RSA-7fázis, RFC3161, Bitcoin OTS\nÁrazás: 490k / 990k / 2.49M / 24.9-49.9M Ft\ninfo@forensicchain.hu\n© 2025 ForensicChain`;
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain'}));a.download='ForensicChain_v3.3_Katalogus.txt';a.click();
+}
+
+// ═══ SCROLL / NAV ═══
+function scrollTo2(id){const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});}
+const sectionIds=['hero','platforms','features','simulator','pricing','technical','contact'];
+const fnDots=document.querySelectorAll('#float-nav button');
+window.addEventListener('scroll',()=>{
+  let cur=0;
+  sectionIds.forEach((id,i)=>{const el=document.getElementById(id);if(el&&window.scrollY>=el.offsetTop-120)cur=i;});
+  fnDots.forEach((d,i)=>d.classList.toggle('active',i===cur));
+  document.querySelectorAll('.nav-links a').forEach((a,i)=>a.classList.toggle('active-link',i===cur));
+},{passive:true});
+
+// spin anim
+document.head.insertAdjacentHTML('beforeend','<style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>');
+</script>
+</body>
+</html>
