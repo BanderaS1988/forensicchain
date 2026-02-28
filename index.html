@@ -370,15 +370,15 @@ footer p{font-size:11px;color:#334155;}
     <button class="ptab android" onclick="switchP('android',this)">📱 Android</button>
   </div>
   <div id="pp-desktop" class="ppanel active">
-    <div class="sc-zone"><div id="sc-desktop"><div class="sc-placeholder" onclick="document.getElementById('up-desktop').click()"><div class="ico">🖼️</div><strong>Képernyőképek feltöltése</strong><p>Desktop · JPG/PNG/WebP</p></div></div><input type="file" id="up-desktop" accept="image/*" multiple onchange="handleUp('desktop',this)"><button class="up-btn" onclick="document.getElementById('up-desktop').click()">＋ Képek hozzáadása</button></div>
+    <div class="sc-zone"><div id="sc-desktop"></div><button class="up-btn" onclick="scNext('desktop')">› Következő kép</button></div>
     <div class="pi"><span class="pi-badge desktop">🖥️ Python · Desktop</span><h3>ForensicChain Desktop</h3><div class="pi-sub">Windows / Linux · Hardverkötött licenc</div><p>Irodai és laboratóriumi forensic elemzés. 7 fázisú kriptográfiai ellenőrzés és jogi dokumentációk generálása.</p><div class="feat-list"><div class="fi">ZIP és FCE/FCE2 csomagok ellenőrzése</div><div class="fi">SHA-512 / Keccak256 / SHA3-512 hash-validálás</div><div class="fi">7 fázisú RSA aláírás OCSP visszavonással</div><div class="fi">OpenTimestamps Bitcoin blokklánc</div><div class="fi">Magyar, amerikai, német jogi sablonok (Daubert)</div><div class="fi">Docker FileBrowser integráció</div><div class="fi">Hardverazonosító alapú licencelés</div></div></div>
   </div>
   <div id="pp-unity" class="ppanel">
-    <div class="sc-zone"><div id="sc-unity"><div class="sc-placeholder" onclick="document.getElementById('up-unity').click()"><div class="ico">🖼️</div><strong>Képernyőképek feltöltése</strong><p>Unity kliens</p></div></div><input type="file" id="up-unity" accept="image/*" multiple onchange="handleUp('unity',this)"><button class="up-btn" onclick="document.getElementById('up-unity').click()">＋ Képek hozzáadása</button></div>
+    <div class="sc-zone"><div id="sc-unity"></div><button class="up-btn" onclick="scNext('unity')">› Következő kép</button></div>
     <div class="pi"><span class="pi-badge unity">🎮 Unity · Kliens</span><h3>ForensicChain Unity</h3><div class="pi-sub">Windows / Mac · Ügykezelő</div><p>Szervezeti szintű ügykezelés grafikus felületen.</p><div class="feat-list"><div class="fi">Ügykezelés: nyitott, folyamatban, lezárt</div><div class="fi">Keresés, szűrés, rendezés</div><div class="fi">Személyzetkezelés QR-kártyákkal</div><div class="fi">Beépített médianézegető</div><div class="fi">Chain of Custody státuszkövetés</div><div class="fi">Magyar / angol felület</div></div></div>
   </div>
   <div id="pp-android" class="ppanel">
-    <div class="sc-zone"><div id="sc-android"><div class="sc-placeholder" onclick="document.getElementById('up-android').click()"><div class="ico">🖼️</div><strong>Képernyőképek feltöltése</strong><p>Android app</p></div></div><input type="file" id="up-android" accept="image/*" multiple onchange="handleUp('android',this)"><button class="up-btn" onclick="document.getElementById('up-android').click()">＋ Képek hozzáadása</button></div>
+    <div class="sc-zone"><div id="sc-android"></div><button class="up-btn" onclick="scNext('android')">› Következő kép</button></div>
     <div class="pi"><span class="pi-badge android">📱 Android · Mobil</span><h3>ForensicChain Mobile</h3><div class="pi-sub">Android 9+ · Helyszíni rögzítés</div><p>Kettős időbélyegzés, metaadat-gyűjtés és automatikus feltöltés.</p><div class="feat-list"><div class="fi">Fotó, videó, hang forensic csomagba</div><div class="fi">Kettős időbélyegzés (RFC 3161 + Bitcoin)</div><div class="fi">GPS, hardver, hálózat, NTP metaadat</div><div class="fi">Szimulált GPS érzékelés</div><div class="fi">QR-kód alapú azonosítás</div><div class="fi">Offline működés + szinkronizálás</div><div class="fi">AES titkosított FCE2 csomag</div></div></div>
   </div>
 </section>
@@ -913,10 +913,15 @@ function renderSC(p){
   const el=document.getElementById('sc-'+p);
   el.innerHTML=`<div class="sc-carousel"><img src="${d.imgs[d.idx]}" onclick="openLB('${d.imgs[d.idx]}')" alt="sc">${d.imgs.length>1?`<div class="sc-ctrl"><div class="sc-arr" onclick="scPrev('${p}')">‹</div><div class="sc-arr" onclick="scNext('${p}')">›</div></div><div class="sc-dots">${d.imgs.map((_,j)=>`<div class="sc-d ${j===d.idx?'active':''}" onclick="scGo('${p}',${j})"></div>`).join('')}</div>`:''}</div>`;
 }
+scData.desktop.imgs=['desktop1.png','desktop2.png','desktop3.png','desktop4.png'];
+scData.unity.imgs=['unity1.png','unity2.png','unity3.png','unity4.png','unity5.png'];
+scData.android.imgs=['android1.png','android2.png','android3.png','android4.png','android5.png'];
+scData.desktop.idx=0; renderSC('desktop');
+scData.unity.idx=0; renderSC('unity');
+scData.android.idx=0; renderSC('android');
 function scNext(p){const d=scData[p];d.idx=(d.idx+1)%d.imgs.length;renderSC(p);}
 function scPrev(p){const d=scData[p];d.idx=(d.idx-1+d.imgs.length)%d.imgs.length;renderSC(p);}
 function scGo(p,i){scData[p].idx=i;renderSC(p);}
-
 // ═══ LIGHTBOX ═══
 function openLB(src){document.getElementById('lb-img').src=src;document.getElementById('lb').classList.add('open');}
 function closeLB(){document.getElementById('lb').classList.remove('open');}
@@ -1191,4 +1196,5 @@ window.addEventListener('scroll',()=>{
 document.head.insertAdjacentHTML('beforeend','<style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>');
 </script>
 </body>
+
 </html>
