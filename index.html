@@ -243,6 +243,44 @@ footer p{font-size:11px;color:#334155;}
 .lb-x:hover{color:#fff;}
 .lb-info{font-size:11px;color:#475569;font-family:'JetBrains Mono',monospace;}
 @media(max-width:900px){nav{padding:0 16px;}.nav-links{display:none;}main{padding-top:88px;}section{padding:48px 20px;}.ppanel.active,.steps-grid,.pricing-grid,.sysreq-grid,.fmap-grid,.uc-grid,.vcard-grid,.quick-stats{grid-template-columns:1fr;}.hero{min-height:auto;padding:60px 20px 48px;}#float-nav{display:none;}footer{flex-direction:column;text-align:center;}}
+  .explainer{max-width:1100px;margin:0 auto;padding:80px 48px;}
+.ex-label{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#38bdf8;margin-bottom:14px;}
+.ex-headline{font-size:clamp(28px,4vw,46px);font-weight:800;color:#f1f5f9;line-height:1.2;margin-bottom:20px;}
+.ex-headline span{background:linear-gradient(135deg,#38bdf8,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.ex-lead{font-size:18px;color:#94a3b8;max-width:720px;line-height:1.8;margin-bottom:60px;}
+.ex-lead strong{color:#e2e8f0;}
+.problem-strip{background:linear-gradient(135deg,#0f1a2e,#111827);border:1px solid #1e3a5f;border-radius:20px;padding:40px;margin-bottom:60px;}
+.problem-strip h3{font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#f59e0b;margin-bottom:28px;}
+.problem-list{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.problem-item{background:#0a0d14;border-radius:14px;padding:22px;border-left:3px solid #ef4444;}
+.problem-item .pi-icon{font-size:28px;margin-bottom:12px;}
+.problem-item h4{font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:8px;}
+.problem-item p{font-size:13px;color:#64748b;line-height:1.6;}
+.problem-item .quote{font-size:13px;color:#ef4444;font-style:italic;margin-top:10px;padding:8px 12px;background:rgba(239,68,68,.06);border-radius:8px;}
+.solution-box{text-align:center;margin-bottom:60px;padding:50px 40px;background:linear-gradient(135deg,rgba(56,189,248,.05),rgba(129,140,248,.05));border:1px solid rgba(56,189,248,.2);border-radius:20px;position:relative;overflow:hidden;}
+.solution-box::before{content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:400px;height:200px;background:radial-gradient(circle,rgba(56,189,248,.08),transparent 70%);}
+.solution-box .sol-icon{font-size:56px;margin-bottom:20px;filter:drop-shadow(0 0 20px rgba(56,189,248,.4));}
+.solution-box h3{font-size:clamp(20px,3vw,32px);font-weight:800;color:#f1f5f9;margin-bottom:16px;position:relative;}
+.solution-box p{font-size:16px;color:#94a3b8;max-width:640px;margin:0 auto;line-height:1.8;position:relative;}
+.solution-box p strong{color:#38bdf8;}
+.how-label{font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#38bdf8;margin-bottom:28px;}
+.how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-bottom:60px;position:relative;}
+.how-steps::before{content:'';position:absolute;top:36px;left:16.6%;right:16.6%;height:2px;background:linear-gradient(90deg,#1e3a5f,#3b82f6,#1e3a5f);z-index:0;}
+.how-step{text-align:center;padding:0 20px;position:relative;z-index:1;}
+.how-num{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#1d4ed8,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 16px;box-shadow:0 0 24px rgba(59,130,246,.3);}
+.how-step h4{font-size:15px;font-weight:700;color:#f1f5f9;margin-bottom:8px;}
+.how-step p{font-size:13px;color:#64748b;line-height:1.6;}
+.who-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:60px;}
+.who-card{background:#0f1a2e;border:1px solid #1e3a5f;border-radius:16px;padding:24px;transition:all .25s;cursor:default;}
+.who-card:hover{border-color:#3b82f6;transform:translateY(-4px);box-shadow:0 8px 30px rgba(59,130,246,.12);}
+.who-card .wc-icon{font-size:32px;margin-bottom:14px;}
+.who-card h4{font-size:15px;font-weight:700;color:#f1f5f9;margin-bottom:8px;}
+.who-card .wc-pain{font-size:13px;color:#ef4444;font-style:italic;margin-bottom:10px;padding:6px 10px;background:rgba(239,68,68,.06);border-radius:6px;border-left:2px solid #ef4444;}
+.who-card .wc-solution{font-size:13px;color:#34d399;padding:6px 10px;background:rgba(52,211,153,.06);border-radius:6px;border-left:2px solid #34d399;}
+.one-liner{text-align:center;padding:50px 40px;background:linear-gradient(135deg,#0f1a2e,#1e293b);border:1px solid #1e3a5f;border-radius:20px;}
+.one-liner h2{font-size:clamp(22px,3.5vw,38px);font-weight:800;color:#f1f5f9;line-height:1.3;margin-bottom:16px;}
+.one-liner h2 span{background:linear-gradient(135deg,#38bdf8,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.one-liner p{font-size:15px;color:#64748b;max-width:560px;margin:0 auto;}
 </style>
 </head>
 <body>
@@ -1408,6 +1446,107 @@ window.addEventListener('scroll',()=>{
 })();
 
 document.head.insertAdjacentHTML('beforeend','<style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>');
+  const EXPLAINER = {
+  hu: {
+    ex_label: 'Mi ez egyáltalán?',
+    ex_headline: 'Vitás helyzetekben<br><span>ki mondja az igazat?</span>',
+    ex_lead: 'Bérlő azt mondja a lakás már így volt átvételkor. A vállalkozó azt mondja elvégezte a munkát. A sofőr azt mondja nem volt rajta az a sérülés. <strong>Mindenki mást állít — és senkinek sincs bizonyítéka.</strong> A ForensicChain ezt oldja meg.',
+    prob_title: '⚠️ Ismerős helyzetek?',
+    problems: [
+      { icon:'🏠', title:'Ingatlan átadás-átvétel', desc:'A bérleti időszak végén mindenki másra emlékszik. Mi volt ott, mi nem. Ki rongált, ki nem.', quote:'"A lakás már ilyen volt amikor beköltöztem."' },
+      { icon:'👷', title:'Kivitelezési viták', desc:'Az alvállalkozó kész munkát jelent. A megrendelő azt mondja nem az. A bíróság kinek hisz?', quote:'"Én elvégeztem a munkát, ő nem fizetett."' },
+      { icon:'🚗', title:'Biztosítási kárbejelentés', desc:'Régi sérülést új balesetként jelentenek be. A biztosító gyanakszik, de bizonyítani nem tud.', quote:'"Ez most keletkezett, nem régi sérülés."' },
+    ],
+    sol_heading: 'A ForensicChain eldönti.',
+    sol_desc: 'Rögzítsd le az állapotot <strong>átadás előtt</strong> — minden fotó kap egy megdönthetetlen, bírósági szintű időbélyeget. Ha vita van, <strong>bizonyítható mi volt és mi nem</strong>. Nem kell hinni senkinek — a rendszer eldönti.',
+    how_label: '🔍 Hogyan működik? Három lépés.',
+    how_steps: [
+      { icon:'📸', title:'Lefotózod', desc:'Az Android appban fényképezed a helyszínt, tárgyakat, állapotot. Bármi amire később szükség lehet.' },
+      { icon:'⛓️', title:'Mi bizonyítjuk', desc:'A rendszer automatikusan rögzíti mikor, hol és mivel készült — és ezt a Bitcoin blokkláncba írja. Megváltoztathatatlanul.' },
+      { icon:'🏛️', title:'Te bizonyítasz', desc:'Vita esetén egy kattintással előhozható a teljes igazolás. Bíróságon, hatóság előtt, bárhol.' },
+    ],
+    who_label: '🎯 Kinek van erre szüksége?',
+    who: [
+      { icon:'🏠', title:'Ingatlankezelők & Bérbeadók', pain:'"Soha többé ne vitatkozz a kaucióról."', solution:'Átadáskor és visszaadáskor rögzítve — a vita megszűnik.' },
+      { icon:'👷', title:'Kivitelezők & Vállalkozók', pain:'"Bizonyítsd be hogy elvégezted a munkát."', solution:'Minden fázis dokumentálva, megkérdőjelezhetetlenül.' },
+      { icon:'🏦', title:'Biztosítók & Kárfelmérők', pain:'"Szűrd ki a csalárd kárbejelentéseket."', solution:'Az időbélyeg bizonyítja mikor keletkezett a kár.' },
+      { icon:'⚖️', title:'Ügyvédek & Jogi irodák', pain:'"A fotó bizonyítékot meg tudja kérdőjelezni a másik fél."', solution:'Bírósági szintű, megdönthetetlen bizonyíték.' },
+      { icon:'🌿', title:'Környezetvédelmi hatóságok', pain:'"Mikor és hol történt a szennyezés?"', solution:'GPS és időpont egyszerre bizonyított.' },
+      { icon:'🏗️', title:'Minőségbiztosítás & QA', pain:'"Ki felelős a hibáért?"', solution:'Az állapot minden pillanatban dokumentált.' },
+    ],
+    oneliner_h: 'Nem kell hinni senkinek.<br><span>A rendszer eldönti.</span>',
+    oneliner_p: 'A ForensicChain nem nyomoz és nem ítélkezik. Egyszerűen bizonyítja hogy mi volt, mikor volt — és hogy senki nem nyúlt hozzá azóta.',
+  },
+  en: {
+    ex_label: 'What is this exactly?',
+    ex_headline: 'In a dispute,<br><span>who tells the truth?</span>',
+    ex_lead: 'The tenant says the flat was already like that. The contractor says the work is done. The driver says the damage wasn\'t there before. <strong>Everyone claims something different — and no one has proof.</strong> ForensicChain solves this.',
+    prob_title: '⚠️ Familiar situations?',
+    problems: [
+      { icon:'🏠', title:'Property handover', desc:'At the end of a tenancy, everyone remembers things differently. What was there, what wasn\'t.', quote:'"The flat was already like this when I moved in."' },
+      { icon:'👷', title:'Construction disputes', desc:'The contractor reports the job done. The client disagrees. Who does the court believe?', quote:'"I completed the work, they didn\'t pay."' },
+      { icon:'🚗', title:'Insurance claims', desc:'Old damage reported as a new accident. The insurer suspects fraud but can\'t prove it.', quote:'"This damage just happened, it\'s not old."' },
+    ],
+    sol_heading: 'ForensicChain decides.',
+    sol_desc: 'Document the condition <strong>before handover</strong> — every photo gets an irrefutable, court-grade timestamp. If there\'s a dispute, <strong>it\'s provable what was there and what wasn\'t</strong>. No one needs to be trusted — the system decides.',
+    how_label: '🔍 How does it work? Three steps.',
+    how_steps: [
+      { icon:'📸', title:'You photograph', desc:'In the Android app you photograph the scene, objects, condition. Anything you might need later.' },
+      { icon:'⛓️', title:'We prove it', desc:'The system automatically records when, where and how it was taken — and writes this to the Bitcoin blockchain. Immutably.' },
+      { icon:'🏛️', title:'You prove your case', desc:'In a dispute, the full certificate is available with one click. In court, before authorities, anywhere.' },
+    ],
+    who_label: '🎯 Who needs this?',
+    who: [
+      { icon:'🏠', title:'Property managers & Landlords', pain:'"Never argue about the deposit again."', solution:'Documented at handover and return — disputes end.' },
+      { icon:'👷', title:'Contractors & Builders', pain:'"Prove you completed the work."', solution:'Every phase documented, unquestionably.' },
+      { icon:'🏦', title:'Insurers & Loss adjusters', pain:'"Filter out fraudulent claims."', solution:'The timestamp proves when the damage occurred.' },
+      { icon:'⚖️', title:'Lawyers & Legal firms', pain:'"The other party can challenge photo evidence."', solution:'Court-grade, irrefutable evidence.' },
+      { icon:'🌿', title:'Environmental authorities', pain:'"When and where did the pollution occur?"', solution:'GPS and timestamp proven simultaneously.' },
+      { icon:'🏗️', title:'Quality assurance & QA', pain:'"Who is responsible for the defect?"', solution:'Condition documented at every moment.' },
+    ],
+    oneliner_h: 'No one needs to be trusted.<br><span>The system decides.</span>',
+    oneliner_p: 'ForensicChain doesn\'t investigate or judge. It simply proves what was there, when it was there — and that no one has touched it since.',
+  }
+};
+
+function renderExplainer() {
+  const tx = EXPLAINER[lang];
+  const el = id => document.getElementById(id);
+  if(!el('ex-label')) return;
+  el('ex-label').textContent = tx.ex_label;
+  el('ex-headline').innerHTML = tx.ex_headline;
+  el('ex-lead').innerHTML = tx.ex_lead;
+  el('prob-title').textContent = tx.prob_title;
+  el('problem-list').innerHTML = tx.problems.map(p=>`
+    <div class="problem-item">
+      <div class="pi-icon">${p.icon}</div>
+      <h4>${p.title}</h4>
+      <p>${p.desc}</p>
+      <div class="quote">${p.quote}</div>
+    </div>`).join('');
+  el('sol-heading').textContent = tx.sol_heading;
+  el('sol-desc').innerHTML = tx.sol_desc;
+  el('how-label').textContent = tx.how_label;
+  el('how-steps').innerHTML = tx.how_steps.map(s=>`
+    <div class="how-step">
+      <div class="how-num">${s.icon}</div>
+      <h4>${s.title}</h4>
+      <p>${s.desc}</p>
+    </div>`).join('');
+  el('who-label').textContent = tx.who_label;
+  el('who-grid').innerHTML = tx.who.map(w=>`
+    <div class="who-card">
+      <div class="wc-icon">${w.icon}</div>
+      <h4>${w.title}</h4>
+      <div class="wc-pain">${w.pain}</div>
+      <div class="wc-solution">✓ ${w.solution}</div>
+    </div>`).join('');
+  el('oneliner-h').innerHTML = tx.oneliner_h;
+  el('oneliner-p').textContent = tx.oneliner_p;
+}
+
+// Hívd meg a renderAll() végén:
+// renderExplainer();
 
 // ══════════════════════════════════════
 // INIT
@@ -1416,5 +1555,6 @@ renderAll();
 </script>
 </body>
 </html>
+
 
 
