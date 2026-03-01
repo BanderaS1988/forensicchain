@@ -747,6 +747,9 @@ function renderAll() {
   initScreenshots();
   buildFmap();
   buildCmpTable();
+  renderExplainer();
+
+  
   // update role overlay if open
   const sel = document.getElementById('role-sel');
   if(sel && sel.value) setRole(sel.value, false);
@@ -815,6 +818,31 @@ function buildMainHTML(tx) {
   </div>
 </div>
 <hr class="div">
+
+
+<section class="explainer">
+  <div class="ex-label" id="ex-label"></div>
+  <h2 class="ex-headline" id="ex-headline"></h2>
+  <p class="ex-lead" id="ex-lead"></p>
+  <div class="problem-strip">
+    <h3 id="prob-title"></h3>
+    <div class="problem-list" id="problem-list"></div>
+  </div>
+  <div class="solution-box">
+    <div class="sol-icon">🔐</div>
+    <h3 id="sol-heading"></h3>
+    <p id="sol-desc"></p>
+  </div>
+  <div class="how-label" id="how-label"></div>
+  <div class="how-steps" id="how-steps"></div>
+  <div class="how-label" id="who-label"></div>
+  <div class="who-grid" id="who-grid"></div>
+  <div class="one-liner">
+    <h2 id="oneliner-h"></h2>
+    <p id="oneliner-p"></p>
+  </div>
+</section>
+
 
 
 <!-- PLATFORMS -->
@@ -1555,6 +1583,7 @@ renderAll();
 </script>
 </body>
 </html>
+
 
 
 
